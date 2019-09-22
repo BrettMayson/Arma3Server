@@ -21,7 +21,7 @@ def mods(d):
             print("Missing keys:", keysdir)
     return launch+"\""
 
-launch = "/home/steam/arma3/arma3server  -profiles=\"/configs/profiles\" -name=\"{}\" -mod={} -world={}".format(os.environ["ARMA_PROFILE"], mods('mods'), os.environ["ARMA_WORLD"])
+launch = "/home/steam/arma3/arma3server  -profiles=\"/configs/profiles\" -name=\"{}\" -mod={} -world={}".format(os.environ["ARMA_PROFILE"], mods('/mods'), os.environ["ARMA_WORLD"])
 
 clients = int(os.environ["HEADLESS_CLIENTS"])
 
@@ -63,7 +63,7 @@ if clients != 0:
 else:
     launch += " -config=\"/configs/{}\"".format(CONFIG_FILE)
 
-launch += " -serverMod={}".format(mods('servermods'))
+launch += " -serverMod={}".format(mods('/servermods'))
 
 print("LAUNCHING ARMA SERVER WITH",launch)
 os.system(launch)

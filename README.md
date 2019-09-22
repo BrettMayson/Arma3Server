@@ -1,5 +1,7 @@
 # Arma 3 Dedicated Server
 
+[![Docker Pulls](https://img.shields.io/docker/pulls/dynulo/arma3server.svg?style=flat-square)](https://hub.docker.com/r/dynulo/arma3server)
+
 An Arma 3 Dedicated Server. Updates to the latest version every time it is restarted.
 
 ## Usage

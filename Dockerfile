@@ -23,7 +23,6 @@ EXPOSE 2305/udp
 
 ADD steamcmd /steamcmd
 ADD launch.py /launch.py
-ADD valve /valve
 
 RUN chmod +x /steamcmd/steam.sh /steamcmd/steamcmd.sh /steamcmd/linux32/steamcmd
 

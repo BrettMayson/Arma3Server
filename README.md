@@ -1,6 +1,6 @@
 # Arma 3 Dedicated Server
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/dynulo/arma3server.svg?style=flat-square)](https://hub.docker.com/r/dynulo/arma3server)
+[![Docker Pulls](https://img.shields.io/docker/pulls/synixebrett/arma3server.svg?style=flat-square)](https://hub.docker.com/r/synixebrett/arma3server)
 
 An Arma 3 Dedicated Server. Updates to the latest version every time it is restarted.
 
@@ -17,9 +17,10 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
         -v path/to/configs:/arma3/configs \
         -v path/to/mods:/arma3/mods \
         -v path/to/servermods:/arma3/servermods \
-        -e ARMA_CONFIG=main.cfg
-        -e STEAM_USERNAME=myusername
-        -e STEAM_PASSWORD=mypassword
+        -e ARMA_CONFIG=main.cfg \
+        -e STEAM_USERNAME=myusername \
+        -e STEAM_PASSWORD=mypassword \
+        synixebrett/arma3server
 ```
 
 Profiles are saved in `/arma3/configs/profiles`

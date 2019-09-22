@@ -1,4 +1,4 @@
-FROM cm2network/steamcmd
+FROM cm2network/steamcmd:root
 
 LABEL maintainer="Dynulo"
 

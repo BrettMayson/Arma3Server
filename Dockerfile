@@ -6,7 +6,7 @@ RUN dpkg --add-architecture i386
 RUN apt-get update
 RUN apt-get install wget python3 lib32gcc1 libstdc++6 libstdc++6:i386 libtbb2:i386 libtbb2 -y
 RUN apt-get clean
-RUN rm /var/lib/apt/lists/*
+RUN rm /var/lib/apt/lists/* -r
 
 RUN mkdir /arma3
 

@@ -23,6 +23,8 @@ EXPOSE 2305/udp
 ADD steamcmd /steamcmd
 ADD launch.py /launch.py
 
+RUN chmod +x /steamcmd/steamcmd.sh
+
 WORKDIR /arma3
 
 STOPSIGNAL SIGINT

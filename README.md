@@ -38,3 +38,11 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e STEAM_PASSWORD` | Steam password |
 
 The steam account does not need to own Arma 3, but must have Steam Guard disabled.
+
+## Headless Client Parameters
+
+| Parameter      | Function | Default |
+| -------------  |--------------| - |
+| `-e HEADLESS` | Launch as a headless client | `false` |
+| `-e HEADLESS_SERVER` | Arma 3 server to connect to |
+| `-e HEADLESS_PASSWORD` | Password to use while connecting |

@@ -13,6 +13,6 @@ jobs:
     - name: Update Docker hub metadata
       uses: docker://mpepping/docker-hub-metadata-github-action
       env:
-        IMAGE: dynulo/arma3server
-        DOCKER_USERNAME: dynulo
+        IMAGE: synixebrett/arma3server
+        DOCKER_USERNAME: synixebrett
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}

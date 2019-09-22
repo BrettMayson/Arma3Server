@@ -28,7 +28,7 @@ clients = int(os.environ["HEADLESS_CLIENTS"])
 print("Headless Clients:", clients)
 
 if clients != 0:
-    with open(f"/arma3/configs/{CONFIG_FILE}") as config:
+    with open("/arma3/configs/{}".format(CONFIG_FILE)) as config:
         data = config.read()
         regex = r"(.+?)(?:\s+)?=(?:\s+)?(.+?)(?:$|\/|;)"
 
@@ -47,7 +47,7 @@ if clients != 0:
 
         with open("/tmp/arma3.cfg", "w") as tmp_config:
             for key, value in config_values.items():
-                tmp_config.write(f"{key} = {value};\n")
+                tmp_config.write("{} = {};\n".format(key, value))
         launch += " -config=\"/tmp/arma3.cfg\""
 
     
@@ -57,11 +57,11 @@ if clients != 0:
         client_launch += " -password={}".format(config_values["password"])
 
     for i in range(0, clients):
-        print(f"LAUNCHING ARMA CLIENT {i} WITH", client_launch)
+        print("LAUNCHING ARMA CLIENT {} WITH".format(i), client_launch)
         subprocess.Popen(client_launch, shell=True)
 
 else:
-    launch += f" -config=\"/arma3/configs/{CONFIG_FILE}\""
+    launch += " -config=\"/arma3/configs/{}\"".format(CONFIG_FILE)
 
 launch += " -serverMod={}".format(mods('servermods'))
 

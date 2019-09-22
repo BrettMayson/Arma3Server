@@ -27,4 +27,4 @@ WORKDIR /arma3
 
 STOPSIGNAL SIGINT
 
-CMD ["python2.7","/launch.py"]
+CMD ["python3","/launch.py"]

@@ -36,4 +36,5 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e ARMA_WORLD` | World to load on startup | `empty` |
 | `-e STEAM_USERNAME` | Steam username used to login to steamcmd |
 | `-e STEAM_PASSWORD` | Steam password |
+
 The steam account does not need to own Arma 3, but must have Steam Guard disabled.

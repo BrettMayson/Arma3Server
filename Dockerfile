@@ -11,6 +11,8 @@ RUN rm /var/lib/apt/lists/* -r
 RUN mkdir /arma3
 
 ENV ARMA_CONFIG=main.cfg
+ENV ARMA_PROIFLE=main
+ENV ARMA_WORLD=empty
 
 EXPOSE 2301/udp
 EXPOSE 2302/udp

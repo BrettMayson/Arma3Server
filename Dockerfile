@@ -7,8 +7,6 @@ RUN apt-get install python3 -y
 RUN apt-get clean
 RUN rm /var/lib/apt/lists/* -r
 
-RUN mkdir /arma3
-
 ENV ARMA_CONFIG=main.cfg
 ENV ARMA_PROFILE=main
 ENV ARMA_WORLD=empty
@@ -22,7 +20,9 @@ EXPOSE 2305/udp
 
 ADD launch.py /launch.py
 
-WORKDIR /arma3
+USER steam
+
+WORKDIR /home/steam
 
 STOPSIGNAL SIGINT
 

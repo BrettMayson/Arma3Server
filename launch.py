@@ -5,7 +5,7 @@ import re
 
 CONFIG_FILE = os.environ["ARMA_CONFIG"]
 
-subprocess.call(["/steamcmd/steamcmd.sh", "+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], "+force_install_dir", "/arma3", "+app_update", "233780", "validate", "+quit"])
+subprocess.call(["/home/steam/steamcmd/steamcmd.sh", "+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], "+force_install_dir", "/arma3", "+app_update", "233780", "validate", "+quit"])
 
 def mods(d):
     launch = "\""

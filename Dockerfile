@@ -1,10 +1,9 @@
-FROM ubuntu
+FROM cm2network/steamcmd
 
 LABEL maintainer="Dynulo"
 
-RUN dpkg --add-architecture i386
 RUN apt-get update
-RUN apt-get install wget python3 lib32gcc1 libstdc++6 libstdc++6:i386 libtbb2:i386 libtbb2 -y
+RUN apt-get install python3 -y
 RUN apt-get clean
 RUN rm /var/lib/apt/lists/* -r
 
@@ -21,10 +20,7 @@ EXPOSE 2303/udp
 EXPOSE 2304/udp
 EXPOSE 2305/udp
 
-ADD steamcmd /steamcmd
 ADD launch.py /launch.py
-
-RUN chmod +x /steamcmd/steam.sh /steamcmd/steamcmd.sh /steamcmd/linux32/steamcmd
 
 WORKDIR /arma3
 

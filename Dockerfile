@@ -23,7 +23,7 @@ EXPOSE 2305/udp
 ADD steamcmd /steamcmd
 ADD launch.py /launch.py
 
-RUN chmod +x /steamcmd/steamcmd.sh
+RUN chmod +x /steamcmd/steam.sh /steamcmd/steamcmd.sh /steamcmd/linux32/steamcmd
 
 WORKDIR /arma3
 

@@ -1,11 +1,21 @@
-FROM cm2network/steamcmd:root
+FROM debian:stretch-slim
 
 LABEL maintainer="Dynulo"
 
 RUN apt-get update
-RUN apt-get install python3 -y
-RUN apt-get clean
+RUN apt-get install -y --no-install-recommends --no-install-suggests \
+        python3 \
+        lib32stdc++6 \
+        lib32gcc1 \
+        wget \
+        ca-certificates
+RUN apt-get remove --purge -y
+RUN apt-get clean autoclean
+RUN apt-get autoremove -y
 RUN rm /var/lib/apt/lists/* -r
+RUN mkdir -p /steamcmd \
+        && cd /steamcmd \
+        && wget -qO- 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar zxf -
 
 ENV ARMA_CONFIG=main.cfg
 ENV ARMA_PROFILE=main
@@ -20,9 +30,9 @@ EXPOSE 2305/udp
 
 ADD launch.py /launch.py
 
-USER steam
+WORKDIR /arma3
 
-WORKDIR /home/steam
+VOLUME /steamcmd
 
 STOPSIGNAL SIGINT
 

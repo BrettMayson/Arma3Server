@@ -5,7 +5,7 @@ import re
 
 CONFIG_FILE = os.environ["ARMA_CONFIG"]
 
-subprocess.call(["/home/steam/steamcmd/steamcmd.sh", "+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], "+force_install_dir", "/home/steam/arma3", "+app_update", "233780", "validate", "+quit"])
+subprocess.call(["/steamcmd/steamcmd.sh", "+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], "+force_install_dir", "/arma3", "+app_update", "233780", "validate", "+quit"])
 
 def mods(d):
     launch = "\""
@@ -16,12 +16,12 @@ def mods(d):
         if os.path.exists(keysdir):
             keys = [os.path.join(keysdir,o) for o in os.listdir(keysdir) if os.path.isdir(os.path.join(keysdir,o)) == False]
             for k in keys:
-                shutil.copy2(k, "/home/steam/arma3/keys")
+                shutil.copy2(k, "/arma3/keys")
         else:
             print("Missing keys:", keysdir)
     return launch+"\""
 
-launch = "/home/steam/arma3/arma3server  -profiles=\"/configs/profiles\" -name=\"{}\" -mod={} -world={}".format(os.environ["ARMA_PROFILE"], mods('/mods'), os.environ["ARMA_WORLD"])
+launch = "/arma3/arma3server  -profiles=\"/configs/profiles\" -name=\"{}\" -mod={} -world={}".format(os.environ["ARMA_PROFILE"], mods('/mods'), os.environ["ARMA_WORLD"])
 
 clients = int(os.environ["HEADLESS_CLIENTS"])
 

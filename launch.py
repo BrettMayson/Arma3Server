@@ -4,17 +4,18 @@ import shutil
 import re
 
 CONFIG_FILE = os.environ["ARMA_CONFIG"]
-KEYS = "/steamcmd/arma3/keys"
+KEYS = "/arma3/keys"
 
-subprocess.call(["/steamcmd/steamcmd.sh", "+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], "+force_install_dir", "/steamcmd/arma3", "+app_update", "233780", "validate", "+quit"])
+if not os.path.exists(KEYS) or not os.path.isdir(KEYS):
+    if os.path.exists(KEYS):
+        os.remove(KEYS)
+    os.makedirs(KEYS)
+
+subprocess.call(["/steamcmd/steamcmd.sh", "+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], "+force_install_dir", "/arma3", "+app_update", "233780", "validate", "+quit"])
 
 def mods(d):
     launch = "\""
     mods = [os.path.join(d,o) for o in os.listdir(d) if os.path.isdir(os.path.join(d,o))]
-    if not os.path.exists(KEYS) or not os.path.isdir(KEYS):
-        if os.path.exists(KEYS):
-            os.remove(KEYS)
-        os.mkdir(KEYS)
     for m in mods:
         launch += m+";"
         keysdir = os.path.join(m,"keys")
@@ -26,14 +27,14 @@ def mods(d):
             print("Missing keys:", keysdir)
     return launch+"\""
 
-launch = "/steamcmd/arma3/arma3server -mod={} -world={}".format(mods('/mods'), os.environ["ARMA_WORLD"])
+launch = "./arma3server -mod={} -world={}".format(mods('mods'), os.environ["ARMA_WORLD"])
 
 clients = int(os.environ["HEADLESS_CLIENTS"])
 
 print("Headless Clients:", clients)
 
 if clients != 0:
-    with open("/configs/{}".format(CONFIG_FILE)) as config:
+    with open("/arma3/configs/{}".format(CONFIG_FILE)) as config:
         data = config.read()
         regex = r"(.+?)(?:\s+)?=(?:\s+)?(.+?)(?:$|\/|;)"
 
@@ -42,8 +43,6 @@ if clients != 0:
         matches = re.finditer(regex, data, re.MULTILINE)
         for matchNum, match in enumerate(matches, start=1):
             config_values[match.group(1).lower()] = match.group(2)
-
-        print("Config: ", config_values)
 
         if not "headlessclients[]" in config_values:
             config_values["headlessclients[]"] = "{\"127.0.0.1\"}"
@@ -66,9 +65,9 @@ if clients != 0:
         subprocess.Popen(client_launch, shell=True)
 
 else:
-    launch += " -config=\"/configs/{}\"".format(CONFIG_FILE)
+    launch += " -config=\"/arma3/configs/{}\"".format(CONFIG_FILE)
 
-launch += " -name=\"{}\" -profiles=\"/configs/profiles\" -serverMod={}".format(os.environ["ARMA_PROFILE"], mods('/servermods'))
+launch += " -name=\"{}\" -profiles=\"/arma3/configs/profiles\" -serverMod={}".format(os.environ["ARMA_PROFILE"], mods('servermods'))
 
-print("LAUNCHING ARMA SERVER WITH",launch)
+print("LAUNCHING ARMA SERVER WITH",launch, flush=True)
 os.system(launch)

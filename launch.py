@@ -4,19 +4,24 @@ import shutil
 import re
 
 CONFIG_FILE = os.environ["ARMA_CONFIG"]
+KEYS = "/steamcmd/arma3/keys"
 
 subprocess.call(["/steamcmd/steamcmd.sh", "+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], "+force_install_dir", "/steamcmd/arma3", "+app_update", "233780", "validate", "+quit"])
 
 def mods(d):
     launch = "\""
     mods = [os.path.join(d,o) for o in os.listdir(d) if os.path.isdir(os.path.join(d,o))]
+    if not os.path.exists(KEYS) or not os.path.isdir(KEYS):
+        if os.path.exists(KEYS):
+            os.remove(KEYS)
+        os.mkdir(KEYS)
     for m in mods:
         launch += m+";"
         keysdir = os.path.join(m,"keys")
         if os.path.exists(keysdir):
             keys = [os.path.join(keysdir,o) for o in os.listdir(keysdir) if os.path.isdir(os.path.join(keysdir,o)) == False]
             for k in keys:
-                shutil.copy2(k, "/steamcmd/arma3/keys")
+                shutil.copy2(k, KEYS)
         else:
             print("Missing keys:", keysdir)
     return launch+"\""

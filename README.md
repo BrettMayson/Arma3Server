@@ -23,7 +23,7 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
         synixebrett/arma3server
 ```
 
-Profiles are saved in `/arma3/configs/profiles`, it must be writeable by UID 1000.
+Profiles are saved in `/arma3/configs/profiles`
 
 ## Parameters
 

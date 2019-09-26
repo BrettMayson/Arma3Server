@@ -1,6 +1,6 @@
 FROM debian:stretch-slim
 
-LABEL maintainer="Dynulo"
+LABEL maintainer="Brett - github.com/synixebrett"
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends --no-install-suggests \

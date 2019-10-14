@@ -67,7 +67,10 @@ if clients != 0:
 else:
     launch += " -config=\"/arma3/configs/{}\"".format(CONFIG_FILE)
 
-launch += " -name=\"{}\" -profiles=\"/arma3/configs/profiles\" -serverMod={}".format(os.environ["ARMA_PROFILE"], mods('servermods'))
+launch += " -name=\"{}\" -profiles=\"/arma3/configs/profiles\"".format(os.environ["ARMA_PROFILE"])
+
+if os.path.exists("servermods"):
+    launch += " -serverMod={}".format(mods("servermods"))
 
 print("LAUNCHING ARMA SERVER WITH",launch, flush=True)
 os.system(launch)

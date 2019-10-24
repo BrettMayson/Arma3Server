@@ -18,7 +18,7 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
         -v path/to/mods:/arma3/mods \
         -v path/to/servermods:/arma3/servermods \
         -e ARMA_CONFIG=main.cfg \
-        -e STEAM_USERNAME=myusername \
+        -e STEAM_USER=myusername \
         -e STEAM_PASSWORD=mypassword \
         synixebrett/arma3server
 ```
@@ -37,7 +37,7 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e ARMA_CONFIG`              | Config file to load from `/arma3/configs`                 | `main.cfg` |
 | `-e ARMA_PROFILE`             | Profile name, stored in `/arma3/configs/profiles`         | `main` |
 | `-e ARMA_WORLD`               | World to load on startup                                  | `empty` |
-| `-e STEAM_USERNAME`           | Steam username used to login to steamcmd |
+| `-e STEAM_USER`               | Steam username used to login to steamcmd |
 | `-e STEAM_PASSWORD`           | Steam password |
 | `-e HEADLESS_CLIENTS`         | Launch n number of headless clients                       | `0` |
 

@@ -12,5 +12,4 @@ jobs:
         username: ${{ secrets.GITHUB_DOCKER_USERNAME }}
         password: ${{ secrets.GITHUB_DOCKER_PASSWORD }}
         registry: docker.pkg.github.com
-        snapshot: true
         tag_names: true

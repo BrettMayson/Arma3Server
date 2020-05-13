@@ -34,10 +34,11 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-v /arma3/configs`           | Folder containing config files |
 | `-v /arma3/mods`              | Mods that will be loaded by clients |
 | `-v /arma3/servermods`        | Mods that will only be loaded by the server |
+| `-e PORT`                     | Port used by the server, (uses PORT to PORT+3)            | 2302 |
 | `-e ARMA_CONFIG`              | Config file to load from `/arma3/configs`                 | `main.cfg` |
 | `-e ARMA_PROFILE`             | Profile name, stored in `/arma3/configs/profiles`         | `main` |
 | `-e ARMA_WORLD`               | World to load on startup                                  | `empty` |
-| `-e STEAM_USER`           | Steam username used to login to steamcmd |
+| `-e STEAM_USER`               | Steam username used to login to steamcmd |
 | `-e STEAM_PASSWORD`           | Steam password |
 | `-e HEADLESS_CLIENTS`         | Launch n number of headless clients                       | `0` |
 

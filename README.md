@@ -9,10 +9,10 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
 ```
     docker create \
         --name=arma-server \
-        -p 2302:2302 \
-        -p 2303:2303 \
-        -p 2304:2304 \
-        -p 2305:2305 \
+        -p 2302:2302/udp \
+        -p 2303:2303/udp \
+        -p 2304:2304/udp \
+        -p 2305:2305/udp \
         -v path/to/missions:/arma3/mpmissions \
         -v path/to/configs:/arma3/configs \
         -v path/to/mods:/arma3/mods \

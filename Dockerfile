@@ -17,6 +17,7 @@ RUN mkdir -p /steamcmd \
         && cd /steamcmd \
         && wget -qO- 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar zxf -
 
+ENV ARMA_BINARY=./arma3server
 ENV ARMA_CONFIG=main.cfg
 ENV ARMA_PROFILE=main
 ENV ARMA_WORLD=empty

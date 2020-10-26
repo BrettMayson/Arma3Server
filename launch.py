@@ -27,7 +27,7 @@ def mods(d):
             print("Missing keys:", keysdir)
     return launch+"\""
 
-launch = "./arma3server -mod={} -world={}".format(mods('mods'), os.environ["ARMA_WORLD"])
+launch = "{} -mod={} -world={}".format(os.environ["ARMA_BINARY"], mods('mods'), os.environ["ARMA_WORLD"])
 
 clients = int(os.environ["HEADLESS_CLIENTS"])
 

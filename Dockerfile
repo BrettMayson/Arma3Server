@@ -2,18 +2,24 @@ FROM debian:buster-slim
 
 LABEL maintainer="Brett - github.com/synixebrett"
 
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends --no-install-suggests \
+RUN apt-get update \
+    && \
+    apt-get install -y --no-install-recommends --no-install-suggests \
         python3 \
         lib32stdc++6 \
         lib32gcc1 \
         wget \
-        ca-certificates
-RUN apt-get remove --purge -y
-RUN apt-get clean autoclean
-RUN apt-get autoremove -y
-RUN rm /var/lib/apt/lists/* -r
-RUN mkdir -p /steamcmd \
+        ca-certificates \
+    && \
+    apt-get remove --purge -y \
+    && \
+    apt-get clean autoclean \
+    && \
+    apt-get autoremove -y \
+    && \
+    rm /var/lib/apt/lists/* -r \
+    && \
+    mkdir -p /steamcmd \
         && cd /steamcmd \
         && wget -qO- 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar zxf -
 

@@ -45,9 +45,9 @@ if clients != 0:
             config_values[match.group(1).lower()] = match.group(2)
 
         if not "headlessclients[]" in config_values:
-            data += "\nheadlessclients[] = {\"127.0.0.1\"}\n"
+            data += "\nheadlessclients[] = {\"127.0.0.1\"};\n"
         if not "localclient[]" in config_values:
-            data += "\nlocalclient[] = {\"127.0.0.1\"}\n"
+            data += "\nlocalclient[] = {\"127.0.0.1\"};\n"
 
         with open("/tmp/arma3.cfg", "w") as tmp_config:
             tmp_config.write(data)

@@ -27,7 +27,10 @@ def mods(d):
             print("Missing keys:", keysdir)
     return launch+"\""
 
-launch = "{} -mod={} -world={}".format(os.environ["ARMA_BINARY"], mods('mods'), os.environ["ARMA_WORLD"])
+launch = "{} -world={}".format(os.environ["ARMA_BINARY"], os.environ["ARMA_WORLD"])
+
+if os.path.exists("mods"):
+    launch += " -mod={}".format(mods("mods"))
 
 clients = int(os.environ["HEADLESS_CLIENTS"])
 

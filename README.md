@@ -39,8 +39,12 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e ARMA_CONFIG`              | Config file to load from `/arma3/configs`                 | `main.cfg` |
 | `-e ARMA_PROFILE`             | Profile name, stored in `/arma3/configs/profiles`         | `main` |
 | `-e ARMA_WORLD`               | World to load on startup                                  | `empty` |
+| `-e STEAM_BRANCH`             | Steam branch used by steamcmd | `public` |
+| `-e STEAM_BRANCH_PASSWORD`    | Steam branch password used by steamcmd |
 | `-e STEAM_USER`               | Steam username used to login to steamcmd |
 | `-e STEAM_PASSWORD`           | Steam password |
 | `-e HEADLESS_CLIENTS`         | Launch n number of headless clients                       | `0` |
 
 The Steam account does not need to own Arma 3, but must have Steam Guard disabled.
+
+List of Steam branches can be found on the Community Wiki, [Arma 3: Steam Branches](https://community.bistudio.com/wiki/Arma_3:_Steam_Branches)

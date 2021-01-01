@@ -11,7 +11,16 @@ if not os.path.exists(KEYS) or not os.path.isdir(KEYS):
         os.remove(KEYS)
     os.makedirs(KEYS)
 
-subprocess.call(["/steamcmd/steamcmd.sh", "+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], "+force_install_dir", "/arma3", "+app_update", "233780", "validate", "+quit"])
+steamcmd = ["/steamcmd/steamcmd.sh"]
+steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
+steamcmd.extend(["+force_install_dir", "/arma3"])
+steamcmd.extend(["+app_update", "233780"])
+if "STEAM_BRANCH" in os.environ and len(os.environ["STEAM_BRANCH"]) > 0:
+    steamcmd.extend(["-beta", os.environ["STEAM_BRANCH"]])
+if "STEAM_BRANCH_PASSWORD" in os.environ and len(os.environ["STEAM_BRANCH_PASSWORD"]) > 0:
+    steamcmd.extend(["-betapassword", os.environ["STEAM_BRANCH_PASSWORD"]])
+steamcmd.extend(["validate", "+quit"])
+subprocess.call(steamcmd)
 
 def mods(d):
     launch = "\""

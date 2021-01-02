@@ -8,7 +8,7 @@ jobs:
     - name: Publish to Registry
       uses: elgohr/Publish-Docker-Github-Action@master
       with:
-        name: synixebrett/arma3server/arma3server
+        name: ${{ github.repository }}/arma3server
         username: ${{ secrets.GITHUB_DOCKER_USERNAME }}
         password: ${{ secrets.GITHUB_DOCKER_PASSWORD }}
         registry: docker.pkg.github.com

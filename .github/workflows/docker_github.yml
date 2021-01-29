@@ -5,11 +5,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
+    - name: Convert repository name to lower case
+      run: echo IMAGE_REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
     - name: Publish to Registry
-      uses: elgohr/Publish-Docker-Github-Action@master
+      uses: docker/build-push-action@v1
       with:
-        name: ${{ github.repository }}/arma3server
-        username: ${{ secrets.GITHUB_DOCKER_USERNAME }}
-        password: ${{ secrets.GITHUB_DOCKER_PASSWORD }}
+        repository: ${{ env.IMAGE_REPOSITORY }}/arma3server
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
         registry: docker.pkg.github.com
-        tag_names: true
+        tag_with_ref: true

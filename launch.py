@@ -36,7 +36,7 @@ def mods(d):
             print("Missing keys:", keysdir)
     return launch+"\""
 
-launch = "{} -world={}".format(os.environ["ARMA_BINARY"], os.environ["ARMA_WORLD"])
+launch = "{} -limitFPS={} -world={}".format(os.environ["ARMA_BINARY"], os.environ["ARMA_LIMITFPS"], os.environ["ARMA_WORLD"])
 
 if os.path.exists("mods"):
     launch += " -mod={}".format(mods("mods"))
@@ -83,5 +83,5 @@ launch += " -port={} -name=\"{}\" -profiles=\"/arma3/configs/profiles\"".format(
 if os.path.exists("servermods"):
     launch += " -serverMod={}".format(mods("servermods"))
 
-print("LAUNCHING ARMA SERVER WITH",launch, flush=True)
+print("LAUNCHING ARMA SERVER WITH", launch, flush=True)
 os.system(launch)

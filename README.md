@@ -6,6 +6,7 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
 
 ## Usage
 
+### Docker cli
 ```
     docker create \
         --name=arma-server \
@@ -22,6 +23,16 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
         -e STEAM_PASSWORD=mypassword \
         synixebrett/arma3server
 ```
+
+### Docker-compose
+Use the docker-compose.yml file inside a folder. It will automatically create 4 folders in which the missions, configs, mods and servermods can be loaded.
+
+` docker-compose up -d `
+
+See [Docker-compose](https://docs.docker.com/compose/install/#install-compose) for an installation guide.
+
+
+
 
 Profiles are saved in `/arma3/configs/profiles`
 

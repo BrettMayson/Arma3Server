@@ -14,6 +14,7 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
         -p 2303:2303/udp \
         -p 2304:2304/udp \
         -p 2305:2305/udp \
+        -p 2306:2306/udp \
         -v path/to/missions:/arma3/mpmissions \
         -v path/to/configs:/arma3/configs \
         -v path/to/mods:/arma3/mods \

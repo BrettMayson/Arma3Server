@@ -3,12 +3,7 @@ services:
   arma3:
     image: synixebrett/arma3server
     container_name: arma3
-    ports:
-      - '2302:2302/udp'
-      - '2303:2303/udp'
-      - '2304:2304/udp'
-      - '2305:2305/udp'
-      - '2306:2306/udp'
+    network_mode: host
     volumes:
       - './missions:/arma3/mpmissions'
       - './configs:/arma3/configs'
@@ -16,6 +11,6 @@ services:
       - './servermods:/arma3/servermods'
     environment:
       - ARMA_CONFIG=main.cfg
-      - STEAM_USER=USERNAMENOTEMAILADDRESS
-      - STEAM_PASSWORD=PASSWORD
+      - STEAM_USER=${STEAMUSER}
+      - STEAM_PASSWORD=${STEAMPASSWORD}
     restart: unless-stopped

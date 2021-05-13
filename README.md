@@ -28,10 +28,19 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
 ### Docker-compose
 Use the docker-compose.yml file inside a folder. It will automatically create 4 folders in which the missions, configs, mods and servermods can be loaded.
 
-` docker-compose up -d `
+Copy the `.env.example` file to `.env`, containing at least `STEAMUSER` and `STEAMPASSWORD`.
+
+Use `docker-compose start` to start the server.
+
+Use `docker-compose logs` to see server logs.
+
+Use `docker-compose down` to shutdown the server.
+
+The `network_mode: host` can be changed to explicit ports if needed.
+
+Use `docker-compose up -d ` to start the server, detached.
 
 See [Docker-compose](https://docs.docker.com/compose/install/#install-compose) for an installation guide.
-
 
 
 
@@ -41,7 +50,7 @@ Profiles are saved in `/arma3/configs/profiles`
 
 | Parameter                     | Function                                                  | Default |
 | -------------                 |--------------                                             | - |
-| `-p 2302-2305`                | Ports required by Arma 3 |
+| `-p 2302-2306`                | Ports required by Arma 3 |
 | `-v /arma3/mpmission`         | Folder with MP Missions |
 | `-v /arma3/configs`           | Folder containing config files |
 | `-v /arma3/mods`              | Mods that will be loaded by clients |

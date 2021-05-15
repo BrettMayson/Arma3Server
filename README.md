@@ -70,3 +70,13 @@ Profiles are saved in `/arma3/configs/profiles`
 The Steam account does not need to own Arma 3, but must have Steam Guard disabled.
 
 List of Steam branches can be found on the Community Wiki, [Arma 3: Steam Branches](https://community.bistudio.com/wiki/Arma_3:_Steam_Branches)
+
+## Loading mods
+
+1. Place the mods inside `/mods` or `/servermods`.
+2. Be sure that the mod folder is all lowercase and does not show up with quotation marks around it when listing the directory eg `'@ACE(v2)'`
+3. Run the following command from the mods and/or servermods directory to confirm that all the files are lowercase. 
+    `find . -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;`
+    If this is NOT the case, the mods will prevent the server from booting.
+4. Make sure that each mod contains a lowercase `/addons` folder. This folder also needs to be lowercase in order for the server to load the required PBO files inside.
+5. Start the server.

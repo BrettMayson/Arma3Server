@@ -58,25 +58,6 @@ def build_mods_string(d):
             print("Missing keys:", keysdir)
     return launch+"\""
 
-def print_subprocess(proc):
-    while True:
-        time.sleep(1)
-        while proc.stdout.readable():
-            line = proc.stdout.readline()
-            if not line:
-                break
-            print(proc.pid + ': ' + line.strip())
-
-def await_death(proc):
-    while True:
-        time.sleep(1)
-        try:
-            # Test if pid accepts sig 0 (nothing will happen)
-            os.kill(proc.pid, 0)
-        except OSError:
-            print("Process isn't alive", proc.pid)
-            break
-
 def download_data():
     s3 = boto3.client('s3')
     s3.download_file(DATA_BUCKET, "mods.zip", "mods.zip")
@@ -103,15 +84,5 @@ if os.path.exists("servermods"):
     launch += " -serverMod={}".format(build_mods_string("servermods"))
 
 print("LAUNCHING ARMA SERVER WITH", launch, flush=True)
-proc = subprocess.Popen(launch, shell=True)
-
-def print_proc():
-    print_subprocess(proc)
-
-output_process = multiprocessing.Process(target=print_proc)
-output_process.start()
-
-await_death(proc)
-
+os.system(launch)
 healthcheck_process.terminate()
-output_process.terminate()

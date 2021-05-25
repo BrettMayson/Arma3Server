@@ -1,6 +1,7 @@
 FROM debian:buster-slim
 
-LABEL maintainer="Brett - github.com/synixebrett"
+LABEL maintainer="Brett - github.com/brettmayson"
+LABEL org.opencontainers.image.source https://github.com/brettmayson/arma3server
 
 RUN apt-get update \
     && \

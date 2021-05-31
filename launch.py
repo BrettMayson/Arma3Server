@@ -39,7 +39,13 @@ def mods(d):
 launch = "{} -limitFPS={} -world={} {}".format(os.environ["ARMA_BINARY"], os.environ["ARMA_LIMITFPS"], os.environ["ARMA_WORLD"], os.environ["ARMA_PARAMS"])
 
 if os.path.exists("mods"):
-    launch += " -mod={}".format(mods("mods"))
+    active_mods = mods("mods");
+    if os.environ["ARMA_CDLC"] != "":
+        active_mods += os.environ["ARMA_CDLC"] + ";"
+    launch += " -mod={}".format(active_mods)
+elif os.environ["ARMA_CDLC"] != "":
+    launch += " -mod={};".format(os.environ["ARMA_CDLC"])
+
 
 clients = int(os.environ["HEADLESS_CLIENTS"])
 
@@ -65,7 +71,7 @@ if clients != 0:
             tmp_config.write(data)
         launch += " -config=\"/tmp/arma3.cfg\""
 
-    
+
     client_launch = launch
     client_launch += " -client -connect=127.0.0.1"
     if "password" in config_values:

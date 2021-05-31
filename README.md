@@ -61,6 +61,7 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e ARMA_PROFILE`             | Profile name, stored in `/arma3/configs/profiles`         | `main` |
 | `-e ARMA_WORLD`               | World to load on startup                                  | `empty` |
 | `-e ARMA_LIMITFPS`            | Maximum FPS | `1000` |
+| `-e ARMA_CDLC`                | cDLCs to load |
 | `-e STEAM_BRANCH`             | Steam branch used by steamcmd | `public` |
 | `-e STEAM_BRANCH_PASSWORD`    | Steam branch password used by steamcmd |
 | `-e STEAM_USER`               | Steam username used to login to steamcmd |
@@ -71,11 +72,24 @@ The Steam account does not need to own Arma 3, but must have Steam Guard disable
 
 List of Steam branches can be found on the Community Wiki, [Arma 3: Steam Branches](https://community.bistudio.com/wiki/Arma_3:_Steam_Branches)
 
+## Creator DLC
+
+To use a Creator DLC the `STEAM_BRANCH` must be set to `creatordlc`
+
+| Name | Flag |
+| ---- | ---- |
+| [Global Mobilization - Cold War Germany](https://store.steampowered.com/app/1042220/Arma_3_Creator_DLC_Global_Mobilization__Cold_War_Germany/) | gm |
+| [S.O.G. Prairie Fire](https://store.steampowered.com/app/1227700/Arma_3_Creator_DLC_SOG_Prairie_Fire) | vn |
+
+### Example
+
+`-e ARMA_CDLC="gm;vn"`
+
 ## Loading mods
 
 1. Place the mods inside `/mods` or `/servermods`.
 2. Be sure that the mod folder is all lowercase and does not show up with quotation marks around it when listing the directory eg `'@ACE(v2)'`
-3. Run the following command from the mods and/or servermods directory to confirm that all the files are lowercase. 
+3. Run the following command from the mods and/or servermods directory to confirm that all the files are lowercase.
     `find . -depth -exec rename 's/(.*)\/([^\/]*)/$1\/\L$2/' {} \;`
     If this is NOT the case, the mods will prevent the server from booting.
 4. Make sure that each mod contains a lowercase `/addons` folder. This folder also needs to be lowercase in order for the server to load the required PBO files inside.

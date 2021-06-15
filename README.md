@@ -6,8 +6,9 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
 
 ## Usage
 
-### Docker cli
-```
+### Docker CLI
+
+```s
     docker create \
         --name=arma-server \
         -p 2302:2302/udp \
@@ -25,7 +26,8 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
         synixebrett/arma3server
 ```
 
-### Docker-compose
+### docker-compose
+
 Use the docker-compose.yml file inside a folder. It will automatically create 4 folders in which the missions, configs, mods and servermods can be loaded.
 
 Copy the `.env.example` file to `.env`, containing at least `STEAMUSER` and `STEAMPASSWORD`.
@@ -38,11 +40,9 @@ Use `docker-compose down` to shutdown the server.
 
 The `network_mode: host` can be changed to explicit ports if needed.
 
-Use `docker-compose up -d ` to start the server, detached.
+Use `docker-compose up -d` to start the server, detached.
 
 See [Docker-compose](https://docs.docker.com/compose/install/#install-compose) for an installation guide.
-
-
 
 Profiles are saved in `/arma3/configs/profiles`
 
@@ -67,6 +67,8 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e STEAM_USER`               | Steam username used to login to steamcmd |
 | `-e STEAM_PASSWORD`           | Steam password |
 | `-e HEADLESS_CLIENTS`         | Launch n number of headless clients                       | `0` |
+| `-e MODS_LOCAL`               | Should the mods folder be loaded | `true` |
+| `-e MODS_PRESET`              | An Arma 3 Launcher preset to load |
 
 The Steam account does not need to own Arma 3, but must have Steam Guard disabled.
 
@@ -87,6 +89,8 @@ To use a Creator DLC the `STEAM_BRANCH` must be set to `creatordlc`
 
 ## Loading mods
 
+### Local
+
 1. Place the mods inside `/mods` or `/servermods`.
 2. Be sure that the mod folder is all lowercase and does not show up with quotation marks around it when listing the directory eg `'@ACE(v2)'`
 3. Run the following command from the mods and/or servermods directory to confirm that all the files are lowercase.
@@ -94,3 +98,11 @@ To use a Creator DLC the `STEAM_BRANCH` must be set to `creatordlc`
     If this is NOT the case, the mods will prevent the server from booting.
 4. Make sure that each mod contains a lowercase `/addons` folder. This folder also needs to be lowercase in order for the server to load the required PBO files inside.
 5. Start the server.
+
+### Workshop
+
+Set the environment variable `MODS_PRESET` to the HTML preset file exported from the Arma 3 Launcher. The path can be local file or a URL. A volume can be created at `/arma3/steamapps/workshop/content/107410` to preserve the mods between containers.
+
+`-e MODS_PRESET="my_mods.html"`
+
+`-e MODS_PRESET="http://example.com/my_mods.html"`

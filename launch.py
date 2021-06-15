@@ -3,6 +3,11 @@ import os
 import shutil
 import re
 
+import local
+
+def mod_param(name, mods):
+    return " -{}=\"{}\" ".format(name, ";".join(mods))
+
 CONFIG_FILE = os.environ["ARMA_CONFIG"]
 KEYS = "/arma3/keys"
 
@@ -10,6 +15,8 @@ if not os.path.exists(KEYS) or not os.path.isdir(KEYS):
     if os.path.exists(KEYS):
         os.remove(KEYS)
     os.makedirs(KEYS)
+
+# Install Arma
 
 steamcmd = ["/steamcmd/steamcmd.sh"]
 steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
@@ -22,33 +29,29 @@ if "STEAM_BRANCH_PASSWORD" in os.environ and len(os.environ["STEAM_BRANCH_PASSWO
 steamcmd.extend(["validate", "+quit"])
 subprocess.call(steamcmd)
 
-def mods(d):
-    launch = "\""
-    mods = [os.path.join(d,o) for o in os.listdir(d) if os.path.isdir(os.path.join(d,o))]
-    for m in mods:
-        launch += m+";"
-        keysdir = os.path.join(m,"keys")
-        if os.path.exists(keysdir):
-            keys = [os.path.join(keysdir,o) for o in os.listdir(keysdir) if os.path.isdir(os.path.join(keysdir,o)) == False]
-            for k in keys:
-                shutil.copy2(k, KEYS)
-        else:
-            print("Missing keys:", keysdir)
-    return launch+"\""
+# Mods
 
-launch = "{} -limitFPS={} -world={} {}".format(os.environ["ARMA_BINARY"], os.environ["ARMA_LIMITFPS"], os.environ["ARMA_WORLD"], os.environ["ARMA_PARAMS"])
+mods = []
 
-if os.path.exists("mods"):
-    active_mods = mods("mods");
-    if os.environ["ARMA_CDLC"] != "":
-        active_mods += os.environ["ARMA_CDLC"] + ";"
-    launch += " -mod={}".format(active_mods)
-elif os.environ["ARMA_CDLC"] != "":
-    launch += " -mod={};".format(os.environ["ARMA_CDLC"])
+if os.environ["MODS_PRESET"] != "":
+    import workshop
+    mods.extend(workshop.preset(os.environ["MODS_PRESET"]))
 
+if os.environ["MODS_LOCAL"] == "true" and os.path.exists("mods"):
+    mods.extend(local.mods("mods"))
+
+if os.environ["ARMA_CDLC"] != "":
+    mods.extend(os.environ["ARMA_CDLC"].replace(" ","").split(";"))
+
+launch = "{} -limitFPS={} -world={} {} {}".format(
+        os.environ["ARMA_BINARY"],
+        os.environ["ARMA_LIMITFPS"],
+        os.environ["ARMA_WORLD"],
+        os.environ["ARMA_PARAMS"],
+        mod_param("mod", mods)
+    )
 
 clients = int(os.environ["HEADLESS_CLIENTS"])
-
 print("Headless Clients:", clients)
 
 if clients != 0:
@@ -87,7 +90,7 @@ else:
 launch += " -port={} -name=\"{}\" -profiles=\"/arma3/configs/profiles\"".format(os.environ["PORT"], os.environ["ARMA_PROFILE"])
 
 if os.path.exists("servermods"):
-    launch += " -serverMod={}".format(mods("servermods"))
+    launch += mod_param("serverMod", local.mods("servermods"))
 
 print("LAUNCHING ARMA SERVER WITH", launch, flush=True)
 os.system(launch)

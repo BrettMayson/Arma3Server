@@ -4,6 +4,7 @@ import shutil
 import re
 
 import local
+import workshop
 
 def mod_param(name, mods):
     return " -{}=\"{}\" ".format(name, ";".join(mods))
@@ -11,7 +12,7 @@ def mod_param(name, mods):
 CONFIG_FILE = os.environ["ARMA_CONFIG"]
 KEYS = "/arma3/keys"
 
-if not os.path.exists(KEYS) or not os.path.isdir(KEYS):
+if not os.path.isdir(KEYS):
     if os.path.exists(KEYS):
         os.remove(KEYS)
     os.makedirs(KEYS)
@@ -34,7 +35,6 @@ subprocess.call(steamcmd)
 mods = []
 
 if os.environ["MODS_PRESET"] != "":
-    import workshop
     mods.extend(workshop.preset(os.environ["MODS_PRESET"]))
 
 if os.environ["MODS_LOCAL"] == "true" and os.path.exists("mods"):

@@ -35,6 +35,8 @@ ENV HEADLESS_CLIENTS=0
 ENV PORT=2302
 ENV STEAM_BRANCH=public
 ENV STEAM_BRANCH_PASSWORD=
+ENV MODS_LOCAL=true
+ENV MODS_PRESET=
 
 EXPOSE 2302/udp
 EXPOSE 2303/udp
@@ -42,12 +44,14 @@ EXPOSE 2304/udp
 EXPOSE 2305/udp
 EXPOSE 2306/udp
 
-ADD launch.py /launch.py
-
 WORKDIR /arma3
 
 VOLUME /steamcmd
 
 STOPSIGNAL SIGINT
+
+ADD launch.py /launch.py
+ADD workshop.py /workshop.py
+ADD local.py /local.py
 
 CMD ["python3","/launch.py"]

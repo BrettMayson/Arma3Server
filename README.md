@@ -80,12 +80,13 @@ To use a Creator DLC the `STEAM_BRANCH` must be set to `creatordlc`
 
 | Name | Flag |
 | ---- | ---- |
+| [CSLA Iron Curtain](https://store.steampowered.com/app/1294440/Arma_3_Creator_DLC_CSLA_Iron_Curtain/) | csla |
 | [Global Mobilization - Cold War Germany](https://store.steampowered.com/app/1042220/Arma_3_Creator_DLC_Global_Mobilization__Cold_War_Germany/) | gm |
 | [S.O.G. Prairie Fire](https://store.steampowered.com/app/1227700/Arma_3_Creator_DLC_SOG_Prairie_Fire) | vn |
 
 ### Example
 
-`-e ARMA_CDLC="gm;vn"`
+`-e ARMA_CDLC="csla;gm;vn"`
 
 ## Loading mods
 

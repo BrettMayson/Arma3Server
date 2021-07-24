@@ -1,8 +1,9 @@
 FROM debian:buster-slim
 
 LABEL maintainer="Brett - github.com/brettmayson"
-LABEL org.opencontainers.image.source https://github.com/brettmayson/arma3server
+LABEL org.opencontainers.image.source=https://github.com/brettmayson/arma3server
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
     && \
     apt-get install -y --no-install-recommends --no-install-suggests \
@@ -18,11 +19,11 @@ RUN apt-get update \
     && \
     apt-get autoremove -y \
     && \
-    rm /var/lib/apt/lists/* -r \
+    rm -rf /var/lib/apt/lists/* \
     && \
     mkdir -p /steamcmd \
-        && cd /steamcmd \
-        && wget -qO- 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar zxf -
+    && \
+    wget -qO- 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar zxf - -C /steamcmd
 
 ENV ARMA_BINARY=./arma3server
 ENV ARMA_CONFIG=main.cfg
@@ -50,8 +51,8 @@ VOLUME /steamcmd
 
 STOPSIGNAL SIGINT
 
-ADD launch.py /launch.py
-ADD workshop.py /workshop.py
-ADD local.py /local.py
+COPY launch.py /launch.py
+COPY workshop.py /workshop.py
+COPY local.py /local.py
 
 CMD ["python3","/launch.py"]

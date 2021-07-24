@@ -1,7 +1,9 @@
 version: '3.8'
 services:
   arma3:
+    build: .
     image: synixebrett/arma3server
+    platform: linux/amd64
     container_name: arma3
     network_mode: host
     volumes:

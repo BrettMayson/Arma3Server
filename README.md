@@ -30,7 +30,7 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
 
 Use the docker-compose.yml file inside a folder. It will automatically create 4 folders in which the missions, configs, mods and servermods can be loaded.
 
-Copy the `.env.example` file to `.env`, containing at least `STEAMUSER` and `STEAMPASSWORD`.
+Copy the `.env.example` file to `.env`, containing at least `STEAM_USER` and `STEAM_PASSWORD`.
 
 Use `docker-compose start` to start the server.
 

@@ -1,7 +1,12 @@
-import os, subprocess
+import os
+import re
+import subprocess
+import urllib.request
 
 LOCAL = "/arma3/mods/"
 WORKSHOP = "/arma3/steamapps/workshop/content/107410/"
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36"  # noqa: E501
+
 
 def mod(id):
     steamcmd = ["/steamcmd/steamcmd.sh"]
@@ -11,23 +16,20 @@ def mod(id):
     steamcmd.extend(["+quit"])
     subprocess.call(steamcmd)
 
+
 def preset(mod_file):
     if mod_file.startswith("http"):
-        import urllib.request
         req = urllib.request.Request(
             mod_file,
-            headers={
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
-            }
+            headers={"User-Agent": USER_AGENT},
         )
         remote = urllib.request.urlopen(req)
-        with open("preset.html", 'wb') as f:
+        with open("preset.html", "wb") as f:
             f.write(remote.read())
         mod_file = "preset.html"
     mods = []
     with open(mod_file) as f:
         html = f.read()
-        import re
         regex = r"filedetails\/\?id=(\d+)\""
         matches = re.finditer(regex, html, re.MULTILINE)
         for _, match in enumerate(matches, start=1):

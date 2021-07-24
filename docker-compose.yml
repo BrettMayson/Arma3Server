@@ -9,8 +9,5 @@ services:
       - './configs:/arma3/configs'
       - './mods:/arma3/mods'
       - './servermods:/arma3/servermods'
-    environment:
-      - ARMA_CONFIG=main.cfg
-      - STEAM_USER=${STEAMUSER}
-      - STEAM_PASSWORD=${STEAMPASSWORD}
+    env_file: .env
     restart: unless-stopped

@@ -51,8 +51,6 @@ VOLUME /steamcmd
 
 STOPSIGNAL SIGINT
 
-COPY launch.py /launch.py
-COPY workshop.py /workshop.py
-COPY local.py /local.py
+COPY *.py /
 
 CMD ["python3","/launch.py"]

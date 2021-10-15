@@ -66,6 +66,7 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e STEAM_BRANCH_PASSWORD`    | Steam branch password used by steamcmd |
 | `-e STEAM_USER`               | Steam username used to login to steamcmd |
 | `-e STEAM_PASSWORD`           | Steam password |
+| `-e STEAM_GUARD_CODE`         | Steam guard code sent by email, it is one time only as per [Steam](https://developer.valvesoftware.com/wiki/SteamCMD#With_a_Steam_account)|
 | `-e HEADLESS_CLIENTS`         | Launch n number of headless clients                       | `0` |
 | `-e MODS_LOCAL`               | Should the mods folder be loaded | `true` |
 | `-e MODS_PRESET`              | An Arma 3 Launcher preset to load |

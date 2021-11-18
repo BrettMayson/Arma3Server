@@ -85,8 +85,9 @@ if clients != 0:
         client_launch += " -password={}".format(config_values["password"])
 
     for i in range(0, clients):
-        print("LAUNCHING ARMA CLIENT {} WITH".format(i), client_launch)
-        subprocess.Popen(client_launch, shell=True)
+        hc_launch = client_launch + ' -name="{}-hc-{}"'.format(os.environ["ARMA_PROFILE"], i)
+        print("LAUNCHING ARMA CLIENT {} WITH".format(i), hc_launch)
+        subprocess.Popen(hc_launch, shell=True)
 
 else:
     launch += ' -config="/arma3/configs/{}"'.format(CONFIG_FILE)

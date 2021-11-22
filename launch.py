@@ -85,7 +85,9 @@ if clients != 0:
         client_launch += " -password={}".format(config_values["password"])
 
     for i in range(0, clients):
-        hc_launch = client_launch + ' -name="{}-hc-{}"'.format(os.environ["ARMA_PROFILE"], i)
+        hc_launch = client_launch + ' -name="{}-hc-{}"'.format(
+            os.environ["ARMA_PROFILE"], i
+        )
         print("LAUNCHING ARMA CLIENT {} WITH".format(i), hc_launch)
         subprocess.Popen(hc_launch, shell=True)
 

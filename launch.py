@@ -54,8 +54,8 @@ launch = "{} -limitFPS={} -world={} {} {}".format(
 )
 
 if os.environ["ARMA_CDLC"] != "":
-    for i in (os.environ["ARMA_CDLC"].split(";")):
-        launch += ' -mod={}'.format(i)
+    for cdlc in (os.environ["ARMA_CDLC"].split(";")):
+        launch += ' -mod={}'.format(cdlc)
 
 clients = int(os.environ["HEADLESS_CLIENTS"])
 print("Headless Clients:", clients)

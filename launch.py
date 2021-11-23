@@ -45,9 +45,6 @@ if os.environ["MODS_PRESET"] != "":
 if os.environ["MODS_LOCAL"] == "true" and os.path.exists("mods"):
     mods.extend(local.mods("mods"))
 
-if os.environ["ARMA_CDLC"] != "":
-    mods.extend(os.environ["ARMA_CDLC"].replace(" ", "").split(";"))
-
 launch = "{} -limitFPS={} -world={} {} {}".format(
     os.environ["ARMA_BINARY"],
     os.environ["ARMA_LIMITFPS"],
@@ -55,6 +52,10 @@ launch = "{} -limitFPS={} -world={} {} {}".format(
     os.environ["ARMA_PARAMS"],
     mod_param("mod", mods),
 )
+
+if os.environ["ARMA_CDLC"] != "":
+    for cdlc in os.environ["ARMA_CDLC"].split(";"):
+        launch += " -mod={}".format(cdlc)
 
 clients = int(os.environ["HEADLESS_CLIENTS"])
 print("Headless Clients:", clients)
@@ -85,7 +86,9 @@ if clients != 0:
         client_launch += " -password={}".format(config_values["password"])
 
     for i in range(0, clients):
-        hc_launch = client_launch + ' -name="{}-hc-{}"'.format(os.environ["ARMA_PROFILE"], i)
+        hc_launch = client_launch + ' -name="{}-hc-{}"'.format(
+            os.environ["ARMA_PROFILE"], i
+        )
         print("LAUNCHING ARMA CLIENT {} WITH".format(i), hc_launch)
         subprocess.Popen(hc_launch, shell=True)
 

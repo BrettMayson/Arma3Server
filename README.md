@@ -87,7 +87,7 @@ To use a Creator DLC the `STEAM_BRANCH` must be set to `creatordlc`
 
 ### Example
 
-`-e ARMA_CDLC="CSLA;GM;vn;WS"`
+`-e ARMA_CDLC="csla;gm;vn;ws"`
 
 ## Loading mods
 

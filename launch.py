@@ -7,7 +7,7 @@ import workshop
 
 
 def mod_param(name, mods):
-    return ' -{}="{}" '.format(name, ";".join(mods))
+    return ' -{}="{}" '.format(name, ";".join(mods)).replace('/arma3/', '')
 
 
 def env_defined(key):

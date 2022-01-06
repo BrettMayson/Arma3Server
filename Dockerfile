@@ -11,6 +11,7 @@ RUN apt-get update \
         lib32stdc++6 \
         lib32gcc1 \
         wget \
+        rename \
         ca-certificates \
     && \
     apt-get remove --purge -y \

@@ -5,8 +5,7 @@ import urllib.request
 
 import keys
 
-LOCAL = "/arma3/mods/"
-WORKSHOP = "/arma3/steamapps/workshop/content/107410/"
+WORKSHOP = "steamapps/workshop/content/107410/"
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36"  # noqa: E501
 
 

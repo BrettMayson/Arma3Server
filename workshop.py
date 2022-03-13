@@ -11,8 +11,8 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 
 
 def mod(id):
     steamcmd = ["/steamcmd/steamcmd.sh"]
-    steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
     steamcmd.extend(["+force_install_dir", "/arma3"])
+    steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
     steamcmd.extend(["+workshop_download_item", "107410", id])
     steamcmd.extend(["+quit"])
     subprocess.call(steamcmd)

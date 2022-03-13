@@ -25,8 +25,8 @@ if not os.path.isdir(KEYS):
 # Install Arma
 
 steamcmd = ["/steamcmd/steamcmd.sh"]
-steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
 steamcmd.extend(["+force_install_dir", "/arma3"])
+steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
 steamcmd.extend(["+app_update", "233780"])
 if env_defined("STEAM_BRANCH"):
     steamcmd.extend(["-beta", os.environ["STEAM_BRANCH"]])

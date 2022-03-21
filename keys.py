@@ -4,7 +4,7 @@ import shutil
 
 
 def copy(moddir):
-    keys = glob.glob(os.path.join(moddir, '**/*.bikey'))
+    keys = glob.glob(os.path.join(moddir, "**/*.bikey"))
     if len(keys) > 0:
         for key in keys:
             if not os.path.isdir(key):
@@ -13,6 +13,6 @@ def copy(moddir):
         print("Missing keys:", moddir)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     for moddir in glob.glob("/arma3/steamapps/workshop/content/107410/*"):
         copy(moddir)

@@ -1,13 +1,18 @@
 import os
+import glob
 import shutil
 
 
 def copy(moddir):
-    keysdir = os.path.join(moddir, "keys")
-    if os.path.exists(keysdir):
-        for o in os.listdir(keysdir):
-            keyfile = os.path.join(keysdir, o)
-            if not os.path.isdir(keyfile):
-                shutil.copy2(keyfile, "/arma3/keys")
+    keys = glob.glob(os.path.join(moddir, '**/*.bikey'))
+    if len(keys) > 0:
+        for key in keys:
+            if not os.path.isdir(key):
+                shutil.copy2(key, "/arma3/keys")
     else:
-        print("Missing keys:", keysdir)
+        print("Missing keys:", moddir)
+
+
+if __name__ == '__main__':
+    for moddir in glob.glob("/arma3/steamapps/workshop/content/107410/*"):
+        copy(moddir)

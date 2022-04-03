@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import shutil
 
 import local
 import workshop

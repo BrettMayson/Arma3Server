@@ -49,6 +49,13 @@ EXPOSE 2306/udp
 WORKDIR /arma3
 
 VOLUME /steamcmd
+VOLUME /arma3/addons
+VOLUME /arma3/enoch
+VOLUME /arma3/expansion
+VOLUME /arma3/jets
+VOLUME /arma3/heli
+VOLUME /arma3/orange
+VOLUME /arma3/argo
 
 STOPSIGNAL SIGINT
 

@@ -37,6 +37,7 @@ if env_defined("STEAM_ADDITIONAL_DEPOT"):
     for depot in os.environ["STEAM_ADDITIONAL_DEPOT"].split("|"):
         depot = depot.split(",")
         steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
+        steamcmd.extend(["+force_install_dir", "/arma3"])
         steamcmd.extend(["+download_depot", "233780", depot[0], depot[1]])
 steamcmd.extend(["+quit"])
 subprocess.call(steamcmd)

@@ -32,6 +32,9 @@ if env_defined("STEAM_BRANCH"):
     steamcmd.extend(["-beta", os.environ["STEAM_BRANCH"]])
 if env_defined("STEAM_BRANCH_PASSWORD"):
     steamcmd.extend(["-betapassword", os.environ["STEAM_BRANCH_PASSWORD"]])
+if env_defined("STEAM_ADDITIONAL_DEPOT"):
+    for depot in os.environ["STEAM_ADDITIONAL_DEPOT"].split(","):
+        steamcmd.extend(["+download_depot", "233780", depot])
 steamcmd.extend(["validate", "+quit"])
 subprocess.call(steamcmd)
 

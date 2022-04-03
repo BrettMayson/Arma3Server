@@ -37,10 +37,17 @@ if env_defined("STEAM_ADDITIONAL_DEPOT"):
     for depot in os.environ["STEAM_ADDITIONAL_DEPOT"].split("|"):
         depot = depot.split(",")
         steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
-        steamcmd.extend(["+force_install_dir", "/arma3"])
         steamcmd.extend(["+download_depot", "233780", depot[0], depot[1]])
 steamcmd.extend(["+quit"])
 subprocess.call(steamcmd)
+
+if env_defined("STEAM_ADDITIONAL_DEPOT"):
+    for depot in os.environ["STEAM_ADDITIONAL_DEPOT"].split("|"):
+        depot = depot.split(",")
+        depot_dir = f"/steamcmd/linux32/steamapps/content/app_233780/depot_{depot[0]}/"
+        for file in os.listdir(depot_dir):
+            os.rename(depot_dir + file, f"/arma3/{file}")
+            print(f"Moved {file} to /arma3")
 
 # Mods
 

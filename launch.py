@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+from string import Template
 
 import local
 import workshop
@@ -86,9 +87,10 @@ if clients != 0:
         client_launch += " -password={}".format(config_values["password"])
 
     for i in range(0, clients):
-        hc_launch = client_launch + ' -name="{}-hc-{}"'.format(
-            os.environ["ARMA_PROFILE"], i
-        )
+        hc_name = Template(os.environ["HEADLESS_CLIENTS_PROFILE"])  # eg. '$profile-hc-$i'
+        hc_name.substitute(profile=os.environ["ARMA_PROFILE"], i=i)
+
+        hc_launch = client_launch + ' -name="{}"'.format(hc_name)
         print("LAUNCHING ARMA CLIENT {} WITH".format(i), hc_launch)
         subprocess.Popen(hc_launch, shell=True)
 

@@ -13,5 +13,5 @@ jobs:
         repository: ${{ env.IMAGE_REPOSITORY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        registry: ghr.io
+        registry: ghcr.io
         tag_with_ref: true

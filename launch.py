@@ -22,7 +22,7 @@ if not os.path.isdir(KEYS):
         os.remove(KEYS)
     os.makedirs(KEYS)
 
-if not os.environ["SKIP_INSTALL"]:
+if os.environ["SKIP_INSTALL"] in ["", "false"]:
     # Install Arma
 
     steamcmd = ["/steamcmd/steamcmd.sh"]

@@ -8,11 +8,11 @@ jobs:
     - name: Convert repository name to lower case
       run: echo IMAGE_REPOSITORY="$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
     - name: Publish to Registry
-      uses: docker/build-push-action@v1
+      uses: docker/build-push-action@v2
       with:
-        repository: ${{ env.IMAGE_REPOSITORY }}/arma3server
+        repository: ${{ github.event.repository.name }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        registry: docker.pkg.github.com
+        registry: ghcr.io
         tag_with_ref: true
         push: true

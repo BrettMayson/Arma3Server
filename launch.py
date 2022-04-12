@@ -22,18 +22,19 @@ if not os.path.isdir(KEYS):
         os.remove(KEYS)
     os.makedirs(KEYS)
 
-# Install Arma
+if not os.environ["SKIP_INSTALL"]:
+    # Install Arma
 
-steamcmd = ["/steamcmd/steamcmd.sh"]
-steamcmd.extend(["+force_install_dir", "/arma3"])
-steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
-steamcmd.extend(["+app_update", "233780"])
-if env_defined("STEAM_BRANCH"):
-    steamcmd.extend(["-beta", os.environ["STEAM_BRANCH"]])
-if env_defined("STEAM_BRANCH_PASSWORD"):
-    steamcmd.extend(["-betapassword", os.environ["STEAM_BRANCH_PASSWORD"]])
-steamcmd.extend(["validate", "+quit"])
-subprocess.call(steamcmd)
+    steamcmd = ["/steamcmd/steamcmd.sh"]
+    steamcmd.extend(["+force_install_dir", "/arma3"])
+    steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
+    steamcmd.extend(["+app_update", "233780"])
+    if env_defined("STEAM_BRANCH"):
+        steamcmd.extend(["-beta", os.environ["STEAM_BRANCH"]])
+    if env_defined("STEAM_BRANCH_PASSWORD"):
+        steamcmd.extend(["-betapassword", os.environ["STEAM_BRANCH_PASSWORD"]])
+    steamcmd.extend(["validate", "+quit"])
+    subprocess.call(steamcmd)
 
 # Mods
 

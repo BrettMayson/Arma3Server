@@ -88,7 +88,7 @@ if clients != 0:
 
     for i in range(0, clients):
         hc_name = Template(os.environ["HEADLESS_CLIENTS_PROFILE"])  # eg. '$profile-hc-$i'
-        hc_name.substitute(profile=os.environ["ARMA_PROFILE"], i=i)
+        hc_name = hc_name.substitute(profile=os.environ["ARMA_PROFILE"], i=i)
 
         hc_launch = client_launch + ' -name="{}"'.format(hc_name)
         print("LAUNCHING ARMA CLIENT {} WITH".format(i), hc_launch)

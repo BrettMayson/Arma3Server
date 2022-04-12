@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 
 LABEL maintainer="Brett - github.com/brettmayson"
 LABEL org.opencontainers.image.source=https://github.com/brettmayson/arma3server
@@ -9,7 +9,7 @@ RUN apt-get update \
     apt-get install -y --no-install-recommends --no-install-suggests \
         python3 \
         lib32stdc++6 \
-        lib32gcc1 \
+        lib32gcc-s1 \
         wget \
         ca-certificates \
     && \

@@ -61,6 +61,7 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e ARMA_PROFILE`             | Profile name, stored in `/arma3/configs/profiles`         | `main` |
 | `-e ARMA_WORLD`               | World to load on startup                                  | `empty` |
 | `-e ARMA_LIMITFPS`            | Maximum FPS | `1000` |
+| `-e ARMA_PARAMS`              | Additional Arma CLI parameters |
 | `-e ARMA_CDLC`                | cDLCs to load |
 | `-e STEAM_BRANCH`             | Steam branch used by steamcmd | `public` |
 | `-e STEAM_BRANCH_PASSWORD`    | Steam branch password used by steamcmd |

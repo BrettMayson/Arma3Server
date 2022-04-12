@@ -10,8 +10,8 @@ jobs:
     - name: Publish to Registry
       uses: docker/build-push-action@v1
       with:
-        repository: ${{ env.IMAGE_REPOSITORY }}/arma3server
+        repository: ${{ env.IMAGE_REPOSITORY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        registry: docker.pkg.github.com
+        registry: ghr.io
         tag_with_ref: true

@@ -69,6 +69,7 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e HEADLESS_CLIENTS`         | Launch n number of headless clients                       | `0` |
 | `-e MODS_LOCAL`               | Should the mods folder be loaded | `true` |
 | `-e MODS_PRESET`              | An Arma 3 Launcher preset to load |
+| `-e SKIP_INSTALL`             | Skip Arma 3 installation | `false` |
 
 The Steam account does not need to own Arma 3, but must have Steam Guard disabled.
 

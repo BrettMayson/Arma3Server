@@ -58,6 +58,7 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e PORT`                     | Port used by the server, (uses PORT to PORT+3)            | 2302 |
 | `-e ARMA_BINARY`              | Arma 3 server binary to use, `./arma3server_x64` for x64   | `./arma3server` |
 | `-e ARMA_CONFIG`              | Config file to load from `/arma3/configs`                 | `main.cfg` |
+| `-e ARMA_PARAMS`              | Additional Arma CLI parameters |
 | `-e ARMA_PROFILE`             | Profile name, stored in `/arma3/configs/profiles`         | `main` |
 | `-e ARMA_WORLD`               | World to load on startup                                  | `empty` |
 | `-e ARMA_LIMITFPS`            | Maximum FPS | `1000` |

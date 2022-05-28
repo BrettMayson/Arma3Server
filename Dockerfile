@@ -10,6 +10,7 @@ RUN apt-get update \
         python3 \
         lib32stdc++6 \
         lib32gcc-s1 \
+        libcurl4 \
         wget \
         ca-certificates \
     && \

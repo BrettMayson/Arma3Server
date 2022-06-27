@@ -14,6 +14,7 @@ def mod(id):
     steamcmd.extend(["+force_install_dir", "/arma3"])
     steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
     steamcmd.extend(["+workshop_download_item", "107410", id])
+    steamcmd.extend(["validate"])
     steamcmd.extend(["+quit"])
     subprocess.call(steamcmd)
 

@@ -12,6 +12,7 @@ RUN apt-get update \
         lib32gcc-s1 \
         libcurl4 \
         wget \
+        rename \
         ca-certificates \
     && \
     apt-get remove --purge -y \

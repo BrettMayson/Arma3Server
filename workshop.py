@@ -8,8 +8,10 @@ import keys
 WORKSHOP = "steamapps/workshop/content/107410/"
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36"  # noqa: E501
 
+def lowercase_workshop_dir(path: str):
+    os.system("(cd {} && find . -depth -exec rename -v 's/(.*)\/([^\/]*)/$1\/\L$2/' {{}} \;)".format(path))
 
-def mod(id):
+def download_mod(id):
     steamcmd = ["/steamcmd/steamcmd.sh"]
     steamcmd.extend(["+force_install_dir", "/arma3"])
     steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
@@ -34,8 +36,9 @@ def preset(mod_file):
         regex = r"filedetails\/\?id=(\d+)\""
         matches = re.finditer(regex, html, re.MULTILINE)
         for _, match in enumerate(matches, start=1):
-            mod(match.group(1))
+            download_mod(match.group(1))
             moddir = WORKSHOP + match.group(1)
+            lowercase_workshop_dir(moddir)
             mods.append(moddir)
             keys.copy(moddir)
     return mods

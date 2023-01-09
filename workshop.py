@@ -42,4 +42,4 @@ def preset(mod_file):
         download(mods)
         for moddir in moddirs:
             keys.copy(moddir)
-    return mods
+    return moddirs

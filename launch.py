@@ -1,5 +1,7 @@
 import os
 import re
+from pathlib import Path
+import shutil
 import subprocess
 from string import Template
 
@@ -15,6 +17,7 @@ def env_defined(key):
     return key in os.environ and len(os.environ[key]) > 0
 
 
+BASE_DIR = Path(os.getcwd()).resolve()
 CONFIG_FILE = os.environ["ARMA_CONFIG"]
 KEYS = "/arma3/keys"
 
@@ -36,6 +39,17 @@ if os.environ["SKIP_INSTALL"] in ["", "false"]:
         steamcmd.extend(["-betapassword", os.environ["STEAM_BRANCH_PASSWORD"]])
     steamcmd.extend(["validate", "+quit"])
     subprocess.call(steamcmd)
+
+
+# move any FILES to root dir like .dll
+if os.path.exists(BASE_DIR / "move_to_root"):
+    for file in os.listdir(BASE_DIR / "move_to_root"):
+        # Check if the path is a directory
+        if os.path.isdir(BASE_DIR / "move_to_root" /file):
+            print('f{file} is a directory, create a volume link instead')
+        else:
+            # Copy the file and overwrite if it already exists
+            shutil.copy2(BASE_DIR / "move_to_root" / file, BASE_DIR / file)    
 
 # Mods
 

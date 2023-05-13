@@ -1,8 +1,9 @@
 import os
 import re
-from pathlib import Path
 import shutil
 import subprocess
+
+from pathlib import Path
 from string import Template
 
 import local
@@ -45,11 +46,11 @@ if os.environ["SKIP_INSTALL"] in ["", "false"]:
 if os.path.exists(BASE_DIR / "move_to_root"):
     for file in os.listdir(BASE_DIR / "move_to_root"):
         # Check if the path is a directory
-        if os.path.isdir(BASE_DIR / "move_to_root" /file):
+        if os.path.isdir(BASE_DIR / "move_to_root" / file):
             print('f{file} is a directory, create a volume link instead')
         else:
             # Copy the file and overwrite if it already exists
-            shutil.copy2(BASE_DIR / "move_to_root" / file, BASE_DIR / file)    
+            shutil.copy2(BASE_DIR / "move_to_root" / file, BASE_DIR / file)
 
 # Mods
 

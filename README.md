@@ -87,10 +87,11 @@ To use a Creator DLC the `STEAM_BRANCH` must be set to `creatordlc`
 | [Global Mobilization - Cold War Germany](https://store.steampowered.com/app/1042220/Arma_3_Creator_DLC_Global_Mobilization__Cold_War_Germany/) | GM |
 | [S.O.G. Prairie Fire](https://store.steampowered.com/app/1227700/Arma_3_Creator_DLC_SOG_Prairie_Fire) | vn |
 | [Western Sahara](https://store.steampowered.com/app/1681170/Arma_3_Creator_DLC_Western_Sahara/) | WS |
+| [Spearhead 1944](https://store.steampowered.com/app/1175380/Arma_3_Creator_DLC_Spearhead_1944/) | spe |
 
 ### Example
 
-`-e ARMA_CDLC="csla;gm;vn;ws"`
+`-e ARMA_CDLC="csla;gm;vn;ws;spe"`
 
 ## Loading mods
 

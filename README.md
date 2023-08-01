@@ -1,7 +1,5 @@
 # Arma 3 Dedicated Server
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/synixebrett/arma3server.svg?style=flat-square)](https://hub.docker.com/r/synixebrett/arma3server)
-
 An Arma 3 Dedicated Server. Updates to the latest version every time it is restarted.
 
 ## Usage
@@ -23,7 +21,7 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
         -e ARMA_CONFIG=main.cfg \
         -e STEAM_USER=myusername \
         -e STEAM_PASSWORD=mypassword \
-        synixebrett/arma3server
+        ghcr.io/brettmayson/arma3server/arma3server:latest
 ```
 
 ### docker-compose

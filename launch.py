@@ -19,12 +19,13 @@ def env_defined(key):
 CONFIG_FILE = os.environ["ARMA_CONFIG"]
 KEYS = "/arma3/keys"
 
+if os.environ["CLEAR_KEYS"] == "true" and os.path.isdir(KEYS):
+    shutil.rmtree(KEYS)
 if not os.path.isdir(KEYS):
     if os.path.exists(KEYS):
         os.remove(KEYS)
     os.makedirs(KEYS)
-elif os.environ["CLEAR_KEYS"] == "true":
-    shutil.rmtree(KEYS)
+
 
 if os.environ["SKIP_INSTALL"] in ["", "false"]:
     # Install Arma

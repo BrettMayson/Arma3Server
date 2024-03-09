@@ -1,7 +1,7 @@
 import os
 import re
-import subprocess
 import shutil
+import subprocess
 from string import Template
 
 import local

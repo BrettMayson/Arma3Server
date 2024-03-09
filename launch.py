@@ -23,6 +23,8 @@ if not os.path.isdir(KEYS):
     if os.path.exists(KEYS):
         os.remove(KEYS)
     os.makedirs(KEYS)
+elif os.environ["CLEAR_KEYS"] == "true":
+    shutil.rmtree(KEYS)
 
 if os.environ["SKIP_INSTALL"] in ["", "false"]:
     # Install Arma

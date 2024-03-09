@@ -26,7 +26,6 @@ if not os.path.isdir(KEYS):
         os.remove(KEYS)
     os.makedirs(KEYS)
 
-
 if os.environ["SKIP_INSTALL"] in ["", "false"]:
     # Install Arma
 

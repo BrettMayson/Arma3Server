@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 import shutil
+from string import Template
 
 import local
 import workshop
@@ -23,24 +24,25 @@ if not os.path.isdir(KEYS):
         os.remove(KEYS)
     os.makedirs(KEYS)
 
-# Install Arma
+if os.environ["SKIP_INSTALL"] in ["", "false"]:
+    # Install Arma
 
-steamcmd = ["/steamcmd/steamcmd.sh"]
-steamcmd.extend(["+force_install_dir", "/arma3"])
-steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
-steamcmd.extend(["+app_update", "233780"])
-if env_defined("STEAM_BRANCH"):
-    steamcmd.extend(["-beta", os.environ["STEAM_BRANCH"]])
-if env_defined("STEAM_BRANCH_PASSWORD"):
-    steamcmd.extend(["-betapassword", os.environ["STEAM_BRANCH_PASSWORD"]])
-steamcmd.extend(["validate"])
-if env_defined("STEAM_ADDITIONAL_DEPOT"):
-    for depot in os.environ["STEAM_ADDITIONAL_DEPOT"].split("|"):
-        depot = depot.split(",")
-        steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
-        steamcmd.extend(["+download_depot", "233780", depot[0], depot[1]])
-steamcmd.extend(["+quit"])
-subprocess.call(steamcmd)
+    steamcmd = ["/steamcmd/steamcmd.sh"]
+    steamcmd.extend(["+force_install_dir", "/arma3"])
+    steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
+    steamcmd.extend(["+app_update", "233780"])
+    if env_defined("STEAM_BRANCH"):
+        steamcmd.extend(["-beta", os.environ["STEAM_BRANCH"]])
+    if env_defined("STEAM_BRANCH_PASSWORD"):
+        steamcmd.extend(["-betapassword", os.environ["STEAM_BRANCH_PASSWORD"]])
+    steamcmd.extend(["validate"])
+    if env_defined("STEAM_ADDITIONAL_DEPOT"):
+        for depot in os.environ["STEAM_ADDITIONAL_DEPOT"].split("|"):
+            depot = depot.split(",")
+            steamcmd.extend(["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]])
+            steamcmd.extend(["+download_depot", "233780", depot[0], depot[1]])
+    steamcmd.extend(["+quit"])
+    subprocess.call(steamcmd)
 
 if env_defined("STEAM_ADDITIONAL_DEPOT"):
     for depot in os.environ["STEAM_ADDITIONAL_DEPOT"].split("|"):
@@ -101,9 +103,14 @@ if clients != 0:
         client_launch += " -password={}".format(config_values["password"])
 
     for i in range(0, clients):
-        hc_launch = client_launch + ' -name="{}-hc-{}"'.format(
-            os.environ["ARMA_PROFILE"], i
+        hc_template = Template(
+            os.environ["HEADLESS_CLIENTS_PROFILE"]
+        )  # eg. '$profile-hc-$i'
+        hc_name = hc_template.substitute(
+            profile=os.environ["ARMA_PROFILE"], i=i, ii=i + 1
         )
+
+        hc_launch = client_launch + ' -name="{}"'.format(hc_name)
         print("LAUNCHING ARMA CLIENT {} WITH".format(i), hc_launch)
         subprocess.Popen(hc_launch, shell=True)
 

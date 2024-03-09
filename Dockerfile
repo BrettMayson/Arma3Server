@@ -10,6 +10,7 @@ RUN apt-get update \
         python3 \
         lib32stdc++6 \
         lib32gcc-s1 \
+        libcurl4 \
         wget \
         ca-certificates \
     && \
@@ -27,18 +28,20 @@ RUN apt-get update \
 
 ENV ARMA_BINARY=./arma3server
 ENV ARMA_CONFIG=main.cfg
+ENV ARMA_PARAMS=
 ENV ARMA_PROFILE=main
 ENV ARMA_WORLD=empty
 ENV ARMA_LIMITFPS=1000
-ENV ARMA_PARAMS=
 ENV ARMA_CDLC=
 ENV HEADLESS_CLIENTS=0
+ENV HEADLESS_CLIENTS_PROFILE="\$profile-hc-\$i"
 ENV PORT=2302
 ENV STEAM_BRANCH=public
 ENV STEAM_BRANCH_PASSWORD=
 ENV STEAM_ADDITIONAL_DEPOT=
 ENV MODS_LOCAL=true
 ENV MODS_PRESET=
+ENV SKIP_INSTALL=false
 
 EXPOSE 2302/udp
 EXPOSE 2303/udp

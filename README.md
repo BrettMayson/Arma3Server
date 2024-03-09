@@ -1,7 +1,5 @@
 # Arma 3 Dedicated Server
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/synixebrett/arma3server.svg?style=flat-square)](https://hub.docker.com/r/synixebrett/arma3server)
-
 An Arma 3 Dedicated Server. Updates to the latest version every time it is restarted.
 
 ## Usage
@@ -23,7 +21,7 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
         -e ARMA_CONFIG=main.cfg \
         -e STEAM_USER=myusername \
         -e STEAM_PASSWORD=mypassword \
-        synixebrett/arma3server
+        ghcr.io/brettmayson/arma3server/arma3server:latest
 ```
 
 ### docker-compose
@@ -58,6 +56,7 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e PORT`                     | Port used by the server, (uses PORT to PORT+3)            | 2302 |
 | `-e ARMA_BINARY`              | Arma 3 server binary to use, `./arma3server_x64` for x64   | `./arma3server` |
 | `-e ARMA_CONFIG`              | Config file to load from `/arma3/configs`                 | `main.cfg` |
+| `-e ARMA_PARAMS`              | Additional Arma CLI parameters |
 | `-e ARMA_PROFILE`             | Profile name, stored in `/arma3/configs/profiles`         | `main` |
 | `-e ARMA_WORLD`               | World to load on startup                                  | `empty` |
 | `-e ARMA_LIMITFPS`            | Maximum FPS | `1000` |
@@ -67,8 +66,10 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e STEAM_USER`               | Steam username used to login to steamcmd |
 | `-e STEAM_PASSWORD`           | Steam password |
 | `-e HEADLESS_CLIENTS`         | Launch n number of headless clients                       | `0` |
+| `-e HEADLESS_CLIENTS_PROFILE` | Headless client profile name (supports placeholders)      | `$profile-hc-$i` |
 | `-e MODS_LOCAL`               | Should the mods folder be loaded | `true` |
 | `-e MODS_PRESET`              | An Arma 3 Launcher preset to load |
+| `-e SKIP_INSTALL`             | Skip Arma 3 installation | `false` |
 
 The Steam account does not need to own Arma 3, but must have Steam Guard disabled.
 
@@ -84,10 +85,11 @@ To use a Creator DLC the `STEAM_BRANCH` must be set to `creatordlc`
 | [Global Mobilization - Cold War Germany](https://store.steampowered.com/app/1042220/Arma_3_Creator_DLC_Global_Mobilization__Cold_War_Germany/) | GM |
 | [S.O.G. Prairie Fire](https://store.steampowered.com/app/1227700/Arma_3_Creator_DLC_SOG_Prairie_Fire) | vn |
 | [Western Sahara](https://store.steampowered.com/app/1681170/Arma_3_Creator_DLC_Western_Sahara/) | WS |
+| [Spearhead 1944](https://store.steampowered.com/app/1175380/Arma_3_Creator_DLC_Spearhead_1944/) | spe |
 
 ### Example
 
-`-e ARMA_CDLC="csla;gm;vn;ws"`
+`-e ARMA_CDLC="csla;gm;vn;ws;spe"`
 
 ## Loading mods
 

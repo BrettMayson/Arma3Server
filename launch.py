@@ -49,7 +49,7 @@ if env_defined("STEAM_ADDITIONAL_DEPOT"):
         depot_parts = depot.split(",")
         depot_dir = f"/steamcmd/linux32/steamapps/content/app_233780/depot_{depot_parts[0]}/"
         for file in os.listdir(depot_dir):
-            shutil.copytree(depot_dir + file, f"/arma3/", dirs_exist_ok=True)
+            shutil.copytree(depot_dir + file, "/arma3/", dirs_exist_ok=True)
             print(f"Moved {file} to /arma3")
 
 # Mods

@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import subprocess
 from string import Template
 
@@ -34,8 +35,28 @@ if os.environ["SKIP_INSTALL"] in ["", "false"]:
         steamcmd.extend(["-beta", os.environ["STEAM_BRANCH"]])
     if env_defined("STEAM_BRANCH_PASSWORD"):
         steamcmd.extend(["-betapassword", os.environ["STEAM_BRANCH_PASSWORD"]])
-    steamcmd.extend(["validate", "+quit"])
+    steamcmd.extend(["validate"])
+    if env_defined("STEAM_ADDITIONAL_DEPOT"):
+        for depot in os.environ["STEAM_ADDITIONAL_DEPOT"].split("|"):
+            depot_parts = depot.split(",")
+            steamcmd.extend(
+                ["+login", os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"]]
+            )
+            steamcmd.extend(
+                ["+download_depot", "233780", depot_parts[0], depot_parts[1]]
+            )
+    steamcmd.extend(["+quit"])
     subprocess.call(steamcmd)
+
+if env_defined("STEAM_ADDITIONAL_DEPOT"):
+    for depot in os.environ["STEAM_ADDITIONAL_DEPOT"].split("|"):
+        depot_parts = depot.split(",")
+        depot_dir = (
+            f"/steamcmd/linux32/steamapps/content/app_233780/depot_{depot_parts[0]}/"
+        )
+        for file in os.listdir(depot_dir):
+            shutil.copytree(depot_dir + file, "/arma3/", dirs_exist_ok=True)
+            print(f"Moved {file} to /arma3")
 
 # Mods
 

@@ -70,7 +70,7 @@ Profiles are saved in `/arma3/configs/profiles`
 | `-e MODS_LOCAL`               | Should the mods folder be loaded | `true` |
 | `-e MODS_PRESET`              | An Arma 3 Launcher preset to load |
 | `-e SKIP_INSTALL`             | Skip Arma 3 installation | `false` |
-| `-e CLEAR_KEYS`               | Clear the keys directory every launch (keys will are copied from mods) | `false` |
+| `-e CLEAR_KEYS`               | Clear the keys directory every launch (keys will still be copied from mods) | `false` |
 
 The Steam account does not need to own Arma 3, but must have Steam Guard disabled.
 

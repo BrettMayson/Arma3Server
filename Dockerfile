@@ -13,6 +13,8 @@ RUN apt-get update \
         libcurl4 \
         wget \
         ca-certificates \
+        libtbbmalloc2 \
+        libtbbmalloc2:i386 \
     && \
     apt-get remove --purge -y \
     && \

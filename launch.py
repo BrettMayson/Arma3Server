@@ -104,7 +104,7 @@ if clients != 0:
         launch += ' -config="/tmp/arma3.cfg"'
 
     client_launch = launch
-    client_launch += " -client -connect=127.0.0.1"
+    client_launch += " -client -connect=127.0.0.1 -port={}".format(os.environ["PORT"])
     if "password" in config_values:
         client_launch += " -password={}".format(config_values["password"])
 

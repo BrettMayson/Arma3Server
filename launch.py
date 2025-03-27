@@ -19,6 +19,8 @@ def env_defined(key):
 CONFIG_FILE = os.environ["ARMA_CONFIG"]
 KEYS = "/arma3/keys"
 
+if env_defined("CLEAR_KEYS") and os.environ["CLEAR_KEYS"] == "true" and os.path.isdir(KEYS):
+    shutil.rmtree(KEYS)
 if not os.path.isdir(KEYS):
     if os.path.exists(KEYS):
         os.remove(KEYS)

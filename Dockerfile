@@ -13,6 +13,8 @@ RUN apt-get update \
         libcurl4 \
         wget \
         ca-certificates \
+        curl \
+        libstdc++6 \
     && \
     apt-get remove --purge -y \
     && \

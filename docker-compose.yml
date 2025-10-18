@@ -2,23 +2,15 @@ version: '3.8'
 services:
   arma3:
     build: .
-    image: ghcr.io/brettmayson/arma3server/arma3server:latest
+    image: ghcr.io/brettmayson/arma3server/arma3server:v2
     platform: linux/amd64
     container_name: arma3
     network_mode: host
     volumes:
-      - './missions:/arma3/mpmissions'
-      - './configs:/arma3/configs'
-      - './mods:/arma3/mods'
-      - './servermods:/arma3/servermods'
-      - 'addons:/arma3/addons'
-      - 'argo:/arma3/argo'
-      - 'enoch:/arma3/enoch'
-      - 'expansion:/arma3/expansion'
-      - 'heli:/arma3/heli'
-      - 'jets:/arma3/jets'
-      - 'orange:/arma3/orange'
-      - 'steamcmd:/steamcmd'
+      - './configs:/arma3/server/configs'
+      - './mods:/arma3/server/mods'
+      - './servermods:/arma3/server/servermods'
+      - './server:/arma3/server/'
     env_file: .env
     restart: unless-stopped
 volumes:

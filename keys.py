@@ -8,7 +8,7 @@ def copy(moddir):
     if len(keys) > 0:
         for key in keys:
             if not os.path.isdir(key):
-                shutil.copy2(key, "/arma3/keys")
+                shutil.copy2(key, "/arma3/server/keys")
     else:
         print("Missing keys:", moddir)
 

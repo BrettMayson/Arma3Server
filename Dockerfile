@@ -8,6 +8,7 @@ RUN apt-get update \
     && \
     apt-get install -y --no-install-recommends --no-install-suggests \
         python3 \
+        python3-pip \
         lib32stdc++6 \
         lib32gcc-s1 \
         libcurl4 \
@@ -17,6 +18,7 @@ RUN apt-get update \
         libstdc++6 \
         libssl3 \
         libc6 \
+        git \
     && \
     apt-get remove --purge -y \
     && \
@@ -24,13 +26,13 @@ RUN apt-get update \
     && \
     apt-get autoremove -y \
     && \
-    rm -rf /var/lib/apt/lists/* \
-    && \
-    mkdir -p /steamcmd \
-    && \
-    wget -qO- 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | tar zxf - -C /steamcmd
+    rm -rf /var/lib/apt/lists/*
 
-ENV ARMA_BINARY=./arma3server
+RUN pip3 install -U zstandard "git+https://github.com/brettmayson/valvepythonsteam#egg=steam[client]"
+
+ENV PYTHONUNBUFFERED=1
+
+ENV ARMA_BINARY=./arma3server_x64
 ENV ARMA_CONFIG=main.cfg
 ENV ARMA_PARAMS=
 ENV ARMA_PROFILE=main
@@ -40,10 +42,8 @@ ENV ARMA_CDLC=
 ENV HEADLESS_CLIENTS=0
 ENV HEADLESS_CLIENTS_PROFILE="\$profile-hc-\$i"
 ENV PORT=2302
-ENV STEAM_BRANCH=public
-ENV STEAM_BRANCH_PASSWORD=
-ENV STEAM_ADDITIONAL_DEPOT=
 ENV MODS_LOCAL=true
+ENV CLEAR_KEYS=true
 ENV MODS_PRESET=
 ENV SKIP_INSTALL=false
 
@@ -55,14 +55,7 @@ EXPOSE 2306/udp
 
 WORKDIR /arma3
 
-VOLUME /steamcmd
-VOLUME /arma3/addons
-VOLUME /arma3/enoch
-VOLUME /arma3/expansion
-VOLUME /arma3/jets
-VOLUME /arma3/heli
-VOLUME /arma3/orange
-VOLUME /arma3/argo
+VOLUME /arma3/server
 
 STOPSIGNAL SIGINT
 

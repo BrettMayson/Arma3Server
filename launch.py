@@ -48,10 +48,13 @@ if os.environ["SKIP_INSTALL"] in ["", "false"]:
 mods = []
 
 mod_preset = os.environ.get("MODS_PRESET", "")
-if mod_preset != "" and os.path.exists(mods_preset):
-    if not client:
-        client = api.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"])
-    mods.extend(workshop.preset(os.environ["MODS_PRESET"], client))
+if mod_preset != "":
+    if os.path.exists(mods_preset):
+        if not client:
+            client = api.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"])
+        mods.extend(workshop.preset(os.environ["MODS_PRESET"], client))
+    else:
+        print(f"MODS_PRESET {mod_preset} does not exist")
 
 if os.environ["MODS_LOCAL"] == "true" and os.path.exists("mods"):
     mods.extend(local.mods("mods"))

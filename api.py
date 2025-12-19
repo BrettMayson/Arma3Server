@@ -41,8 +41,13 @@ def load_cached_manifests():
             return None
         
         return cache_data.get('manifests', [])
-    except (json.JSONDecodeError, FileNotFoundError):
+    except (json.JSONDecodeError, FileNotFoundError, UnicodeDecodeError):
         print("Cache file corrupted or missing, will refetch...")
+        try:
+            if os.path.exists(MANIFEST_CACHE_FILE):
+                os.remove(MANIFEST_CACHE_FILE)
+        except Exception:
+            pass
         return None
 
 def save_manifests_to_cache(manifests):
@@ -136,36 +141,53 @@ def download_files(client, cdn_client, files, destination):
             
     print("All files downloaded successfully.")
 
-def _download_single_file(file):
+def _download_single_file(file, max_retries=3):
     if file.local and os.path.dirname(file.local) != "":
         os.makedirs(os.path.dirname(file.local), exist_ok=True)
     
     chunk_size = 1024 * 1024  # 1MB chunks
-    downloaded = 0
-    failed = False
+    retry_count = 0
     
-    with open(file.local, 'wb') as f:
-        while downloaded < file.size:
-            remaining = file.size - downloaded
-            read_size = min(chunk_size, remaining)
+    while retry_count <= max_retries:
+        try:
+            downloaded = 0
+            
+            with open(file.local, 'wb') as f:
+                while downloaded < file.size:
+                    remaining = file.size - downloaded
+                    read_size = min(chunk_size, remaining)
 
-            chunk = file.read(read_size)
-            if not chunk:
-                break
+                    chunk = file.read(read_size)
+                    if not chunk:
+                        break
+                    
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    
+                    if downloaded % (10 * 1024 * 1024) == 0:
+                        percent = (downloaded / file.size) * 100
+                        print(f"  Progress: {percent:.1f}% ({downloaded}/{file.size} bytes)")
             
-            f.write(chunk)
-            downloaded += len(chunk)
+            # Success - break out of retry loop
+            if file.is_executable:
+                os.chmod(file.local, 0o755)
+            print(f"✓ Downloaded {file.filename}")
+            return
             
-            if downloaded % (10 * 1024 * 1024) == 0:
-                percent = (downloaded / file.size) * 100
-                print(f"  Progress: {percent:.1f}% ({downloaded}/{file.size} bytes)")
-                
-    if failed:
-        print(f"Failed to download {file.filename}")
-    else:
-        if file.is_executable:
-            os.chmod(file.local, 0o755)
-        print(f"✓ Downloaded {file.filename}")
+        except Exception as e:
+            retry_count += 1
+            if retry_count > max_retries:
+                print(f"✗ Failed to download {file.filename} after {max_retries} retries: {str(e)}")
+                raise
+            
+            wait_time = 2 ** retry_count  # Exponential backoff: 2, 4, 8 seconds
+            print(f"  Download failed: {str(e)}")
+            print(f"  Retrying in {wait_time} seconds... (attempt {retry_count}/{max_retries})")
+            time.sleep(wait_time)
+            
+            # Reset file for retry
+            if os.path.exists(file.local):
+                os.remove(file.local)
 
 if __name__ == "__main__":
     import os

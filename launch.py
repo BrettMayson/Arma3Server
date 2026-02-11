@@ -28,6 +28,14 @@ if not os.path.isdir(KEYS):
 
 client = None
 if os.environ["SKIP_INSTALL"] in ["", "false"]:
+    # Added docker secret file support
+    if os.path.exists('/var/run/secrets/STEAM_USER'):
+        with open('/var/run/secrets/STEAM_USER', 'r') as f:
+            os.environ["STEAM_USER"] = f.read().strip()
+    if os.path.exists('/var/run/secrets/STEAM_PASSWORD'):
+        with open('/var/run/secrets/STEAM_PASSWORD', 'r') as f:
+            os.environ["STEAM_PASSWORD"] = f.read().strip()
+
     client = api.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"])
     if not client:
         print("Failed to login to Steam, exiting...")

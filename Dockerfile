@@ -28,7 +28,7 @@ RUN apt-get update \
     && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install -U zstandard "git+https://github.com/brettmayson/valvepythonsteam#egg=steam[client]"
+RUN pip3 install -U zstandard "git+https://github.com/brettmayson/valvepythonsteam#egg=steam[client]" --break-system-packages
 
 ENV PYTHONUNBUFFERED=1
 

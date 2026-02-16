@@ -22,11 +22,11 @@ def preset(mod_file, client):
             f.write(remote.read())
         mod_file = "preset.html"
     elif mod_file.startswith("smb://"):
-        # Parse SMB URL and setup anonymous connection
+        # Parse SMB URL and setup anonymous/guest connection
         parsed = urlparse(mod_file)
         server = parsed.hostname
-        # Register anonymous session for the server
-        smbclient.register_session(server, username='', password='')
+        # Register guest session for anonymous access
+        smbclient.register_session(server, username='guest', password='')
         
         with smbclient.open_file(mod_file, mode='rb') as remote:
             with open("preset.html", "wb") as f:

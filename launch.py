@@ -33,7 +33,7 @@ if os.environ["SKIP_INSTALL"] in ["", "false"]:
         print("Failed to login to Steam, exiting...")
         exit(1)
     api.download_depot(client, 233781) # Default Content
-    api.download_depot(client, 233783) # Linux Server
+    api.download_depot(client, 233780) # Linux Server
     if os.environ["ARMA_BINARY"] == "arma3serverprofiling_x64":
         api.download_depot(client, 233785) # Arma 3 Profiling
 

@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 LABEL maintainer="Brett - github.com/brettmayson"
 LABEL org.opencontainers.image.source=https://github.com/brettmayson/arma3server
@@ -28,7 +28,7 @@ RUN apt-get update \
     && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install -U zstandard "git+https://github.com/brettmayson/valvepythonsteam#egg=steam[client]"
+RUN pip3 install -U zstandard "git+https://github.com/brettmayson/valvepythonsteam#egg=steam[client]" --break-system-packages
 
 ENV PYTHONUNBUFFERED=1
 
@@ -51,7 +51,6 @@ EXPOSE 2302/udp
 EXPOSE 2303/udp
 EXPOSE 2304/udp
 EXPOSE 2305/udp
-EXPOSE 2306/udp
 
 WORKDIR /arma3
 

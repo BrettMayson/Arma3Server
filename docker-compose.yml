@@ -1,11 +1,13 @@
-version: '3.8'
 services:
   arma3:
     build: .
-    image: ghcr.io/brettmayson/arma3server/arma3server:v2
     platform: linux/amd64
     container_name: arma3
-    network_mode: host
+    ports:
+      - ${HOST_IP}:2302:2302/udp
+      - ${HOST_IP}:2303:2303/udp
+      - ${HOST_IP}:2304:2304/udp
+      - ${HOST_IP}:2305:2305/udp
     volumes:
       - './configs:/arma3/server/configs'
       - './mods:/arma3/server/mods'

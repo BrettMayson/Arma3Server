@@ -5,6 +5,7 @@ import urllib.request
 import shutil
 from urllib.parse import urlparse
 import smbclient
+from smbclient import ClientConfig
 
 import keys
 import api
@@ -25,6 +26,8 @@ def preset(mod_file, client):
         # Parse SMB URL and setup anonymous/guest connection
         parsed = urlparse(mod_file)
         server = parsed.hostname
+        # Configure client to disable encryption and signing for guest access
+        ClientConfig(require_signing=False, require_encryption=False)
         # Register guest session for anonymous access
         smbclient.register_session(server, username='guest', password='')
         

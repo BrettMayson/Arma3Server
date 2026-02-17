@@ -1,5 +1,5 @@
 from steam.client import SteamClient
-from steam.client.cdn import CDNClient, CDNDepotFile
+from steam.client.cdn import CDNClient
 import os
 import hashlib
 import json
@@ -32,7 +32,16 @@ CDLC_IDS = {
 }
 
 def _get_cdn_client(client, retries=3, base_delay=1.5):
-    """Reuse a CDNClient when possible; retry construction on failure."""
+    """Return a cached CDNClient or build one with retries.
+
+    Args:
+        client: Authenticated SteamClient instance.
+        retries: How many attempts to construct CDNClient before giving up.
+        base_delay: Base seconds for linear backoff between attempts.
+
+    Returns:
+        CDNClient or None if construction failed after retries.
+    """
     global _CACHED_CDN_CLIENT, _CACHED_STEAM_CLIENT_ID
 
     if _CACHED_CDN_CLIENT and _CACHED_STEAM_CLIENT_ID == id(client):
@@ -59,10 +68,12 @@ _CACHED_STEAM_CLIENT_ID = None
 
 
 def _normalize_path(path):
+    """Normalize a filesystem path to lowercase forward-slash form."""
     return path.replace("\\", "/").lower()
 
 
 def _content_hash_hex(file_obj):
+    """Return the hex content hash from a CDN file object."""
     content_hash = getattr(file_obj, "sha_content", "")
     if isinstance(content_hash, bytes):
         return content_hash.hex()
@@ -70,6 +81,7 @@ def _content_hash_hex(file_obj):
 
 
 def _compute_file_hash(local_path, content_hash):
+    """Compute stable hash combining normalized path and content hash."""
     digest = hashlib.sha1()
     digest.update(local_path.encode("utf-8"))
     digest.update(b"|")
@@ -78,6 +90,7 @@ def _compute_file_hash(local_path, content_hash):
 
 
 def _combined_mod_hash(file_hashes):
+    """Combine individual file hashes deterministically for state header."""
     digest = hashlib.sha1()
     for file_hash in sorted(file_hashes):
         digest.update(file_hash.encode("utf-8"))
@@ -85,6 +98,7 @@ def _combined_mod_hash(file_hashes):
 
 
 def _index_paths(index_root, item_id):
+    """Compute index directories for a given depot/workshop item."""
     mod_dir = os.path.join(index_root, str(item_id))
     files_dir = os.path.join(mod_dir, "files")
     state_file = os.path.join(mod_dir, "state.txt")
@@ -92,6 +106,7 @@ def _index_paths(index_root, item_id):
 
 
 def _ensure_state_header(index_root, item_id, combined_hash="pending"):
+    """Ensure the state.txt header exists for an item index."""
     mod_dir, files_dir, state_file = _index_paths(index_root, item_id)
     os.makedirs(files_dir, exist_ok=True)
 
@@ -105,6 +120,7 @@ def _ensure_state_header(index_root, item_id, combined_hash="pending"):
 
 
 def _write_file_entry(index_root, item_id, entry):
+    """Write a single file entry checkpoint into the index."""
     _, files_dir, _ = _index_paths(index_root, item_id)
     os.makedirs(files_dir, exist_ok=True)
 
@@ -118,6 +134,15 @@ def _write_file_entry(index_root, item_id, entry):
 
 
 def _load_state(index_root, item_id):
+    """Load indexed state for an item if present.
+
+    Args:
+        index_root: Root folder for indices (workshop/depot).
+        item_id: Workshop ID or depot ID.
+
+    Returns:
+        Dict with version/method/combined_hash/files or None if missing/invalid.
+    """
     mod_dir, files_dir, state_file = _index_paths(index_root, item_id)
 
     if not os.path.exists(state_file):
@@ -162,6 +187,7 @@ def _load_state(index_root, item_id):
 
 
 def _save_state(index_root, item_id, combined_hash, files):
+    """Persist state header and file checkpoints for an item."""
     mod_dir, files_dir, _ = _index_paths(index_root, item_id)
     os.makedirs(files_dir, exist_ok=True)
 
@@ -193,6 +219,7 @@ def _save_state(index_root, item_id, combined_hash, files):
 
 
 def _build_remote_state(destination_root, files):
+    """Build remote manifest state for downstream diffing."""
     entries = []
     file_map = {}
 
@@ -215,6 +242,7 @@ def _build_remote_state(destination_root, files):
 
 
 def _diff_states(remote_state, local_state):
+    """Compare remote vs local state into download/delete/unchanged buckets."""
     remote_map = {entry["path"]: entry for entry in remote_state.get("files", [])}
     local_files = local_state.get("files", []) if local_state else []
     local_map = {entry["path"]: entry for entry in local_files}
@@ -238,6 +266,7 @@ def _diff_states(remote_state, local_state):
 
 
 def _remove_local_files(entries):
+    """Delete local files listed in entries, ignoring errors."""
     for entry in entries:
         local_path = os.path.normpath(entry["path"])
         try:
@@ -247,7 +276,16 @@ def _remove_local_files(entries):
             print(f"Warning: failed to delete {local_path}")
 
 
-def _sync_content(client, cdn_client, files, destination, index_root, item_id, label):
+def _sync_content(files, destination, index_root, item_id, label):
+    """Incrementally sync a depot/workshop set using manifest diffs and cached index.
+
+    Args:
+        files: Iterable of CDN file objects from the manifest.
+        destination: Local root where files should land.
+        index_root: Folder containing the per-item index subfolder.
+        item_id: Depot or workshop ID used for index names.
+        label: Human-readable label for logging.
+    """
     if not files:
         print(f"{label} has no files in manifest.")
         return
@@ -316,13 +354,26 @@ def _sync_content(client, cdn_client, files, destination, index_root, item_id, l
     print(f"{label} synced. Combined hash: {remote_state['combined_hash']}")
 
 def login(username, password):
+    """Log in to Steam and return an authenticated SteamClient.
+
+    Args:
+        username: Steam username.
+        password: Steam password.
+
+    Returns:
+        Authenticated SteamClient instance.
+    """
     client = SteamClient()
     client.login(username, password)
     print("Logged in to Steam as", client.user.name)
     return client
 
 def load_cached_manifests():
-    """Load cached manifest data if it exists and is not expired"""
+    """Load cached manifest data if present and fresh.
+
+    Returns:
+        List of cached manifest dicts or None if missing/expired/corrupt.
+    """
     if not os.path.exists(MANIFEST_CACHE_FILE):
         return None
     
@@ -340,7 +391,11 @@ def load_cached_manifests():
         return None
 
 def save_manifests_to_cache(manifests):
-    """Save manifest data to cache with timestamp"""
+    """Save manifest data to cache with timestamp.
+
+    Args:
+        manifests: Iterable of manifest objects from CDNClient.get_manifests.
+    """
     os.makedirs(CACHE_DIR, exist_ok=True)
     
     manifest_data = []
@@ -362,6 +417,12 @@ def save_manifests_to_cache(manifests):
     print(f"Manifest data cached to {MANIFEST_CACHE_FILE}")
 
 def download_depot(client, depot_id):
+    """Sync a depot by manifest, using cached CDN client and indexed state.
+
+    Args:
+        client: Authenticated SteamClient instance.
+        depot_id: Depot ID to sync.
+    """
     cdn_client = _get_cdn_client(client)
     if not cdn_client:
         print("Cannot download depot without CDN client; aborting.")
@@ -398,8 +459,6 @@ def download_depot(client, depot_id):
     files = [f for f in files if f.is_file]
     print(f"Found {len(files)} files to download")
     _sync_content(
-        client,
-        cdn_client,
         files,
         destination=DEPOT_ROOT,
         index_root=DEPOT_INDEX_DIR,
@@ -408,6 +467,12 @@ def download_depot(client, depot_id):
     )
 
 def download_workshop(client, workshop_id):
+    """Sync a workshop item by manifest with indexed incremental updates.
+
+    Args:
+        client: Authenticated SteamClient instance.
+        workshop_id: Workshop ID to sync.
+    """
     cdn_client = _get_cdn_client(client)
     if not cdn_client:
         print(f"Cannot download workshop {workshop_id} without CDN client; aborting.")
@@ -416,8 +481,6 @@ def download_workshop(client, workshop_id):
     files = [f for f in workshop_manifest.iter_files() if f.is_file]
     destination = os.path.join(WORKSHOP_ROOT, str(workshop_id))
     _sync_content(
-        client,
-        cdn_client,
         files,
         destination=destination,
         index_root=WORKSHOP_INDEX_DIR,
@@ -426,6 +489,19 @@ def download_workshop(client, workshop_id):
     )
 
 def download_files(files, destination, post_download_hook=None, max_workers=4, chunk_size=4 * 1024 * 1024, progress_interval=60):
+    """Download CDN files in parallel with optional checkpointing.
+
+    Args:
+        files: Iterable of CDN file objects to download.
+        destination: Local root directory where files are written.
+        post_download_hook: Optional callable(file_obj) for checkpointing per file.
+        max_workers: Worker threads for file-level parallelism.
+        chunk_size: Read chunk size in bytes.
+        progress_interval: Seconds between per-file progress logs; set -1/0 to disable.
+
+    Returns:
+        True on full success, False if any file failed.
+    """
     files_to_download = []
 
     for file in files:
@@ -492,6 +568,17 @@ def download_files(files, destination, post_download_hook=None, max_workers=4, c
 
 
 def _download_single_file(file, chunk_size, print_lock=None, progress_interval=60):
+    """Stream a single CDN file to disk with optional periodic progress.
+
+    Args:
+        file: CDN file object with read(), size, filename, is_executable.
+        chunk_size: Read chunk size in bytes.
+        print_lock: Optional threading.Lock for serialized prints.
+        progress_interval: Seconds between progress logs; disable with -1/0.
+
+    Returns:
+        True if the file fully downloaded; False otherwise.
+    """
     if file.local and os.path.dirname(file.local) != "":
         os.makedirs(os.path.dirname(file.local), exist_ok=True)
 

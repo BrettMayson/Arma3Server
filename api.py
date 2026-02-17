@@ -425,7 +425,7 @@ def download_workshop(client, workshop_id):
         label=f"Workshop {workshop_id}",
     )
 
-def download_files(files, destination, post_download_hook=None, max_workers=4, chunk_size=4 * 1024 * 1024, progress_interval=120):
+def download_files(files, destination, post_download_hook=None, max_workers=4, chunk_size=4 * 1024 * 1024, progress_interval=60):
     files_to_download = []
 
     for file in files:
@@ -491,7 +491,7 @@ def download_files(files, destination, post_download_hook=None, max_workers=4, c
     return True
 
 
-def _download_single_file(file, chunk_size, print_lock=None, progress_interval=120):
+def _download_single_file(file, chunk_size, print_lock=None, progress_interval=60):
     if file.local and os.path.dirname(file.local) != "":
         os.makedirs(os.path.dirname(file.local), exist_ok=True)
 

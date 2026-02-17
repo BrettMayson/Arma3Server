@@ -53,6 +53,35 @@ def _combined_mod_hash(file_hashes):
     return digest.hexdigest()
 
 
+def _ensure_mod_state_header(workshop_id, combined_hash="pending"):
+    mod_dir = os.path.join(WORKSHOP_INDEX_DIR, str(workshop_id))
+    files_dir = os.path.join(mod_dir, "files")
+    os.makedirs(files_dir, exist_ok=True)
+
+    state_file = os.path.join(mod_dir, "state.txt")
+    if os.path.exists(state_file):
+        return
+
+    with open(state_file, "w") as f:
+        f.write(f"{STATE_VERSION}\n")
+        f.write(f"{COMBINATION_METHOD}\n")
+        f.write(f"{combined_hash}\n")
+
+
+def _write_file_entry(workshop_id, entry):
+    mod_dir = os.path.join(WORKSHOP_INDEX_DIR, str(workshop_id))
+    files_dir = os.path.join(mod_dir, "files")
+    os.makedirs(files_dir, exist_ok=True)
+
+    entry_path = os.path.join(files_dir, f"{entry['file_hash']}.txt")
+    with open(entry_path, "w") as f_entry:
+        f_entry.write(f"{entry['path']}\n")
+        f_entry.write(f"{entry['file_hash']}\n")
+        f_entry.write(f"{entry['content_hash']}\n")
+        f_entry.write(f"{entry.get('size', 0)}\n")
+        f_entry.write(f"{entry.get('downloaded_at', 0.0)}\n")
+
+
 def _load_mod_state(workshop_id):
     mod_dir = os.path.join(WORKSHOP_INDEX_DIR, str(workshop_id))
     state_file = os.path.join(mod_dir, "state.txt")
@@ -278,6 +307,8 @@ def download_workshop(client, workshop_id):
     remote_state, _ = _build_remote_state(workshop_id, files)
     local_state = _load_mod_state(workshop_id)
 
+    _ensure_mod_state_header(workshop_id, combined_hash=local_state.get("combined_hash") if local_state else "pending")
+
     if local_state and (local_state.get("version") != STATE_VERSION or local_state.get("method") != COMBINATION_METHOD):
         print("Local workshop index format changed, ignoring cached state.")
         local_state = None
@@ -296,16 +327,34 @@ def download_workshop(client, workshop_id):
 
     destination = os.path.join(WORKSHOP_ROOT, str(workshop_id))
 
+    entry_map = {entry["path"]: entry for entry in to_download}
+
     if to_download:
+        def _checkpoint(file_obj):
+            path = _normalize_path(file_obj.local)
+            entry = entry_map.get(path)
+            if not entry:
+                return
+            checkpoint = {
+                "path": entry["path"],
+                "file_hash": entry["file_hash"],
+                "content_hash": entry["content_hash"],
+                "size": entry.get("size", 0),
+                "downloaded_at": time.time(),
+            }
+            _write_file_entry(workshop_id, checkpoint)
+
         download_files(
             client,
             cdn_client,
             [entry["file"] for entry in to_download],
             destination=destination,
             verify_local_hash=False,
+            post_download_hook=_checkpoint,
         )
 
-    local_map = {entry["path"]: entry for entry in local_state.get("files", [])} if local_state else {}
+    updated_state = _load_mod_state(workshop_id) or {}
+    local_map = {entry["path"]: entry for entry in updated_state.get("files", [])}
     now = time.time()
     persisted_files = []
 
@@ -323,7 +372,7 @@ def download_workshop(client, workshop_id):
     _save_mod_state(workshop_id, remote_state["combined_hash"], persisted_files)
     print(f"Workshop {workshop_id} synced. Combined hash: {remote_state['combined_hash']}")
 
-def download_files(client, cdn_client, files, destination, verify_local_hash=True):
+def download_files(client, cdn_client, files, destination, verify_local_hash=True, post_download_hook=None):
     if verify_local_hash:
         print(f"Verifying {len(files)} files...")
     else:
@@ -349,7 +398,12 @@ def download_files(client, cdn_client, files, destination, verify_local_hash=Tru
     
     for i, file in enumerate(files_to_download):
         print(f"Downloading {i+1}/{len(files_to_download)}: {file.filename} ({file.size} bytes)")
-        _download_single_file(file)
+        success = _download_single_file(file)
+        if success and post_download_hook:
+            try:
+                post_download_hook(file)
+            except Exception:
+                print("Warning: checkpoint hook failed; continuing")
             
     print("All files downloaded successfully.")
 
@@ -366,8 +420,14 @@ def _download_single_file(file):
             remaining = file.size - downloaded
             read_size = min(chunk_size, remaining)
 
-            chunk = file.read(read_size)
+            try:
+                chunk = file.read(read_size)
+            except Exception:
+                failed = True
+                break
+
             if not chunk:
+                failed = True
                 break
             
             f.write(chunk)
@@ -377,12 +437,14 @@ def _download_single_file(file):
                 percent = (downloaded / file.size) * 100
                 print(f"  Progress: {percent:.1f}% ({downloaded}/{file.size} bytes)")
                 
-    if failed:
+    if failed or downloaded < file.size:
         print(f"Failed to download {file.filename}")
+        return False
     else:
         if file.is_executable:
             os.chmod(file.local, 0o755)
         print(f"✓ Downloaded {file.filename}")
+        return True
 
 if __name__ == "__main__":
     import os

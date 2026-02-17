@@ -144,5 +144,7 @@ if os.path.exists("servermods"):
     launch += mod_param("serverMod", local.mods("servermods"))
 
 print("LAUNCHING ARMA SERVER WITH", launch, flush=True)
+# ensure binary is executable (chmod +x) before launching
+os.chmod("/arma3/server/{}".format(os.environ["ARMA_BINARY"]), 0o755)
 os.chdir("/arma3/server")
 os.system(launch)

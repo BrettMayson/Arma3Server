@@ -433,8 +433,6 @@ def download_workshop(client, workshop_id):
 def download_files(client, cdn_client, files, destination, verify_local_hash=True, post_download_hook=None, max_workers=4, chunk_size=4 * 1024 * 1024):
     if verify_local_hash:
         print(f"Verifying {len(files)} files...")
-    else:
-        print(f"Skipping local hash verification for {len(files)} files (using manifest state)...")
 
     files_to_download = []
 
@@ -457,7 +455,7 @@ def download_files(client, cdn_client, files, destination, verify_local_hash=Tru
         print("All files already up to date.")
         return True
 
-    print(f"Downloading {len(files_to_download)} of {len(files)} files across {max_workers} workers. {len(files) - len(files_to_download)} already up to date")
+    print(f"Downloading {len(files_to_download)} files across {max_workers} workers.")
 
     checkpoint_lock = threading.Lock()
     print_lock = threading.Lock()

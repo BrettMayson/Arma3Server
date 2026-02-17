@@ -67,6 +67,35 @@ _CACHED_CDN_CLIENT = None
 _CACHED_STEAM_CLIENT_ID = None
 
 
+def _retry_cdn_op(op_name, func, *args, retries=3, base_delay=1.5, **kwargs):
+    """Run a CDNClient operation with retries and linear backoff.
+
+    Args:
+        op_name: Label for logging.
+        func: Callable to execute.
+        *args: Positional args for the callable.
+        retries: Maximum attempts.
+        base_delay: Seconds base delay; multiplied by attempt number.
+        **kwargs: Keyword args for the callable.
+
+    Returns:
+        The callable result.
+
+    Raises:
+        RuntimeError: if all attempts failed.
+    """
+    last_error = None
+    for attempt in range(1, retries + 1):
+        try:
+            return func(*args, **kwargs)
+        except Exception as exc:
+            last_error = exc
+            print(f"{op_name} failed (attempt {attempt}/{retries}): {exc}")
+            if attempt < retries:
+                time.sleep(base_delay * attempt)
+    raise RuntimeError(f"{op_name} failed after {retries} attempts: {last_error}")
+
+
 def _normalize_path(path):
     """Normalize a filesystem path to lowercase forward-slash form."""
     return path.replace("\\", "/").lower()
@@ -435,7 +464,7 @@ def download_depot(client, depot_id):
         print("Got manifests from cache for ARMA3 server app ID:", ARMA3_SERVER_APP_ID)
     else:
         print("Fetching fresh manifests from Steam...")
-        manifests_obj = cdn_client.get_manifests(ARMA3_SERVER_APP_ID, branch="creatordlc")
+        manifests_obj = _retry_cdn_op("get_manifests", cdn_client.get_manifests, ARMA3_SERVER_APP_ID, branch="creatordlc")
         
         save_manifests_to_cache(manifests_obj)
         
@@ -454,8 +483,14 @@ def download_depot(client, depot_id):
     
     print(f"Downloading Manifest ID: {target_manifest['gid']}, Depot ID: {target_manifest['depot_id']}")
 
-    files_generator = cdn_client.iter_files(ARMA3_SERVER_APP_ID, branch="creatordlc", filter_func=lambda d_id, depot_info: d_id == target_manifest['depot_id'])
-    files = list(files_generator)
+    files = _retry_cdn_op(
+        "iter_files",
+        lambda: list(cdn_client.iter_files(
+            ARMA3_SERVER_APP_ID,
+            branch="creatordlc",
+            filter_func=lambda d_id, depot_info: d_id == target_manifest['depot_id'],
+        )),
+    )
     files = [f for f in files if f.is_file]
     print(f"Found {len(files)} files to download")
     _sync_content(
@@ -477,7 +512,7 @@ def download_workshop(client, workshop_id):
     if not cdn_client:
         print(f"Cannot download workshop {workshop_id} without CDN client; aborting.")
         return
-    workshop_manifest = cdn_client.get_manifest_for_workshop_item(workshop_id)
+    workshop_manifest = _retry_cdn_op("get_manifest_for_workshop_item", cdn_client.get_manifest_for_workshop_item, workshop_id)
     files = [f for f in workshop_manifest.iter_files() if f.is_file]
     destination = os.path.join(WORKSHOP_ROOT, str(workshop_id))
     _sync_content(

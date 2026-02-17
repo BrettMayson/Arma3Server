@@ -11,7 +11,7 @@ import api
 
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36"  # noqa: E501
 
-def preset(mod_file, client):
+def preset(mod_file, client, config=None):
     if mod_file.startswith("http"):
         req = urllib.request.Request(
             mod_file,
@@ -29,7 +29,7 @@ def preset(mod_file, client):
         matches = re.finditer(regex, html, re.MULTILINE)
         for _, match in enumerate(matches, start=1):
             mods.append(match.group(1))
-            api.download_workshop(client, int(match.group(1)))
+            api.download_workshop(client, int(match.group(1)), config=config)
             moddirs.append("workshop/" + match.group(1))
         for moddir in moddirs:
             keys.copy("server/"+moddir)

@@ -16,8 +16,34 @@ def mod_param(name, mods):
 def env_defined(key):
     return key in os.environ and len(os.environ[key]) > 0
 
+
+def env_int(key, default):
+    value = os.environ.get(key)
+    try:
+        return int(value) if value not in [None, ""] else default
+    except ValueError:
+        return default
+
+
+def env_float(key, default):
+    value = os.environ.get(key)
+    try:
+        return float(value) if value not in [None, ""] else default
+    except ValueError:
+        return default
+
 CONFIG_FILE = os.environ["ARMA_CONFIG"]
 KEYS = "/arma3/server/keys"
+
+api_config = {
+    "cdn_client_retries": env_int("ARMA_CDN_CLIENT_RETRIES", 3),
+    "cdn_client_base_delay": env_float("ARMA_CDN_CLIENT_BASE_DELAY", 1.5),
+    "cdn_op_retries": env_int("ARMA_CDN_OP_RETRIES", 3),
+    "cdn_op_base_delay": env_float("ARMA_CDN_OP_BASE_DELAY", 1.5),
+    "download_max_workers": env_int("ARMA_DOWNLOAD_MAX_WORKERS", 4),
+    "download_chunk_size": env_int("ARMA_DOWNLOAD_CHUNK_SIZE", 4 * 1024 * 1024),
+    "download_progress_interval": env_int("ARMA_DOWNLOAD_PROGRESS_INTERVAL", 60),
+}
 
 if env_defined("CLEAR_KEYS") and os.environ["CLEAR_KEYS"] == "true" and os.path.isdir(KEYS):
     shutil.rmtree(KEYS)
@@ -32,16 +58,16 @@ if os.environ["SKIP_INSTALL"] in ["", "false"]:
     if not client:
         print("Failed to login to Steam, exiting...")
         exit(1)
-    api.download_depot(client, 233781) # Default Content
-    api.download_depot(client, 233780) # Linux Server
+    api.download_depot(client, 233781, config=api_config) # Default Content
+    api.download_depot(client, 233780, config=api_config) # Linux Server
     if os.environ["ARMA_BINARY"] == "arma3serverprofiling_x64":
-        api.download_depot(client, 233785) # Arma 3 Profiling
+        api.download_depot(client, 233785, config=api_config) # Arma 3 Profiling
 
     for cdlc in os.environ["ARMA_CDLC"].split(";"):
         if cdlc:
             cdlc = cdlc.lower()
             print("Downloading CDLC:", cdlc)
-            api.download_depot(client, api.CDLC_IDS[cdlc])
+            api.download_depot(client, api.CDLC_IDS[cdlc], config=api_config)
 
 # Mods
 
@@ -50,7 +76,7 @@ mods = []
 if os.environ["MODS_PRESET"] != "":
     if not client:
         client = api.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"])
-    mods.extend(workshop.preset(os.environ["MODS_PRESET"], client))
+    mods.extend(workshop.preset(os.environ["MODS_PRESET"], client, config=api_config))
 
 if os.environ["MODS_LOCAL"] == "true" and os.path.exists("mods"):
     mods.extend(local.mods("mods"))

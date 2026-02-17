@@ -21,6 +21,16 @@ DEPOT_INDEX_DIR = os.path.join(INDEX_ROOT, "depot")
 STATE_VERSION = "1.0"
 COMBINATION_METHOD = "file-hash-asc"
 
+DEFAULT_CONFIG = {
+    "cdn_client_retries": 3,
+    "cdn_client_base_delay": 1.5,
+    "cdn_op_retries": 3,
+    "cdn_op_base_delay": 1.5,
+    "download_max_workers": 4,
+    "download_chunk_size": 4 * 1024 * 1024,
+    "download_progress_interval": 60,
+}
+
 CDLC_IDS = {
     "csla": 233793,
     "gm": 233792,
@@ -31,18 +41,29 @@ CDLC_IDS = {
     "ef": 233798
 }
 
-def _get_cdn_client(client, retries=3, base_delay=1.5):
+
+def _resolve_config(config=None):
+    """Merge caller config with defaults without mutating inputs."""
+    merged = DEFAULT_CONFIG.copy()
+    if config:
+        merged.update({k: v for k, v in config.items() if v is not None})
+    return merged
+
+def _get_cdn_client(client, config=None):
     """Return a cached CDNClient or build one with retries.
 
     Args:
         client: Authenticated SteamClient instance.
-        retries: How many attempts to construct CDNClient before giving up.
-        base_delay: Base seconds for linear backoff between attempts.
+        config: Config map containing cdn_client_retries/base_delay.
 
     Returns:
         CDNClient or None if construction failed after retries.
     """
     global _CACHED_CDN_CLIENT, _CACHED_STEAM_CLIENT_ID
+
+    resolved = _resolve_config(config)
+    retries = resolved["cdn_client_retries"]
+    base_delay = resolved["cdn_client_base_delay"]
 
     if _CACHED_CDN_CLIENT and _CACHED_STEAM_CLIENT_ID == id(client):
         return _CACHED_CDN_CLIENT
@@ -74,8 +95,9 @@ def _retry_cdn_op(op_name, func, *args, retries=3, base_delay=1.5, **kwargs):
         op_name: Label for logging.
         func: Callable to execute.
         *args: Positional args for the callable.
-        retries: Maximum attempts.
+        retries: Maximum attempts (overrides config if provided).
         base_delay: Seconds base delay; multiplied by attempt number.
+        config: Optional config map supplying retry defaults.
         **kwargs: Keyword args for the callable.
 
     Returns:
@@ -84,6 +106,12 @@ def _retry_cdn_op(op_name, func, *args, retries=3, base_delay=1.5, **kwargs):
     Raises:
         RuntimeError: if all attempts failed.
     """
+    resolved = _resolve_config(kwargs.pop("config", None))
+    retries = kwargs.pop("retries", retries)
+    base_delay = kwargs.pop("base_delay", base_delay)
+    retries = retries if retries is not None else resolved["cdn_op_retries"]
+    base_delay = base_delay if base_delay is not None else resolved["cdn_op_base_delay"]
+
     last_error = None
     for attempt in range(1, retries + 1):
         try:
@@ -305,7 +333,7 @@ def _remove_local_files(entries):
             print(f"Warning: failed to delete {local_path}")
 
 
-def _sync_content(files, destination, index_root, item_id, label):
+def _sync_content(files, destination, index_root, item_id, label, config=None):
     """Incrementally sync a depot/workshop set using manifest diffs and cached index.
 
     Args:
@@ -314,6 +342,7 @@ def _sync_content(files, destination, index_root, item_id, label):
         index_root: Folder containing the per-item index subfolder.
         item_id: Depot or workshop ID used for index names.
         label: Human-readable label for logging.
+        config: Config map for download tuning.
     """
     if not files:
         print(f"{label} has no files in manifest.")
@@ -361,6 +390,7 @@ def _sync_content(files, destination, index_root, item_id, label):
             [entry["file"] for entry in to_download],
             destination=destination,
             post_download_hook=_checkpoint,
+            config=config,
         )
 
     updated_state = _load_state(index_root, item_id) or {}
@@ -445,14 +475,17 @@ def save_manifests_to_cache(manifests):
     
     print(f"Manifest data cached to {MANIFEST_CACHE_FILE}")
 
-def download_depot(client, depot_id):
+def download_depot(client, depot_id, config=None):
     """Sync a depot by manifest, using cached CDN client and indexed state.
 
     Args:
         client: Authenticated SteamClient instance.
         depot_id: Depot ID to sync.
+        config: Config map for retries/download tuning.
     """
-    cdn_client = _get_cdn_client(client)
+    resolved_config = _resolve_config(config)
+
+    cdn_client = _get_cdn_client(client, resolved_config)
     if not cdn_client:
         print("Cannot download depot without CDN client; aborting.")
         return
@@ -464,7 +497,7 @@ def download_depot(client, depot_id):
         print("Got manifests from cache for ARMA3 server app ID:", ARMA3_SERVER_APP_ID)
     else:
         print("Fetching fresh manifests from Steam...")
-        manifests_obj = _retry_cdn_op("get_manifests", cdn_client.get_manifests, ARMA3_SERVER_APP_ID, branch="creatordlc")
+        manifests_obj = _retry_cdn_op("get_manifests", cdn_client.get_manifests, ARMA3_SERVER_APP_ID, branch="creatordlc", config=resolved_config)
         
         save_manifests_to_cache(manifests_obj)
         
@@ -490,6 +523,7 @@ def download_depot(client, depot_id):
             branch="creatordlc",
             filter_func=lambda d_id, depot_info: d_id == target_manifest['depot_id'],
         )),
+        config=resolved_config,
     )
     files = [f for f in files if f.is_file]
     print(f"Found {len(files)} files to download")
@@ -499,20 +533,24 @@ def download_depot(client, depot_id):
         index_root=DEPOT_INDEX_DIR,
         item_id=depot_id,
         label=f"Depot {depot_id}",
+        config=resolved_config,
     )
 
-def download_workshop(client, workshop_id):
+def download_workshop(client, workshop_id, config=None):
     """Sync a workshop item by manifest with indexed incremental updates.
 
     Args:
         client: Authenticated SteamClient instance.
         workshop_id: Workshop ID to sync.
+        config: Config map for retries/download tuning.
     """
-    cdn_client = _get_cdn_client(client)
+    resolved_config = _resolve_config(config)
+
+    cdn_client = _get_cdn_client(client, resolved_config)
     if not cdn_client:
         print(f"Cannot download workshop {workshop_id} without CDN client; aborting.")
         return
-    workshop_manifest = _retry_cdn_op("get_manifest_for_workshop_item", cdn_client.get_manifest_for_workshop_item, workshop_id)
+    workshop_manifest = _retry_cdn_op("get_manifest_for_workshop_item", cdn_client.get_manifest_for_workshop_item, workshop_id, config=resolved_config)
     files = [f for f in workshop_manifest.iter_files() if f.is_file]
     destination = os.path.join(WORKSHOP_ROOT, str(workshop_id))
     _sync_content(
@@ -521,22 +559,25 @@ def download_workshop(client, workshop_id):
         index_root=WORKSHOP_INDEX_DIR,
         item_id=workshop_id,
         label=f"Workshop {workshop_id}",
+        config=resolved_config,
     )
 
-def download_files(files, destination, post_download_hook=None, max_workers=4, chunk_size=4 * 1024 * 1024, progress_interval=60):
+def download_files(files, destination, post_download_hook=None, config=None):
     """Download CDN files in parallel with optional checkpointing.
 
     Args:
         files: Iterable of CDN file objects to download.
         destination: Local root directory where files are written.
         post_download_hook: Optional callable(file_obj) for checkpointing per file.
-        max_workers: Worker threads for file-level parallelism.
-        chunk_size: Read chunk size in bytes.
-        progress_interval: Seconds between per-file progress logs; set -1/0 to disable.
+        config: Config map for worker counts/chunk sizes/progress interval.
 
     Returns:
         True on full success, False if any file failed.
     """
+    resolved_config = _resolve_config(config)
+    max_workers = resolved_config["download_max_workers"]
+    chunk_size = resolved_config["download_chunk_size"]
+    progress_interval = resolved_config["download_progress_interval"]
     files_to_download = []
 
     for file in files:

@@ -12,7 +12,7 @@ MANIFEST_CACHE_FILE = os.path.join(CACHE_DIR, "manifests.json")
 CACHE_EXPIRY_SECONDS = 5 * 60
 
 WORKSHOP_ROOT = "server/workshop"
-WORKSHOP_INDEX_DIR = "/arma3/workshop-index"
+WORKSHOP_INDEX_DIR = os.path.join(CACHE_DIR, "workshop-index")
 STATE_VERSION = "1.0"
 COMBINATION_METHOD = "file-hash-asc"
 

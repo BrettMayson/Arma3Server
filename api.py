@@ -247,7 +247,7 @@ def _remove_local_files(entries):
             print(f"Warning: failed to delete {local_path}")
 
 
-def _sync_content(client, cdn_client, files, destination, index_root, item_id, label, verify_local_hash=False):
+def _sync_content(client, cdn_client, files, destination, index_root, item_id, label):
     if not files:
         print(f"{label} has no files in manifest.")
         return
@@ -291,11 +291,8 @@ def _sync_content(client, cdn_client, files, destination, index_root, item_id, l
             _write_file_entry(index_root, item_id, checkpoint)
 
         download_files(
-            client,
-            cdn_client,
             [entry["file"] for entry in to_download],
             destination=destination,
-            verify_local_hash=verify_local_hash,
             post_download_hook=_checkpoint,
         )
 
@@ -408,7 +405,6 @@ def download_depot(client, depot_id):
         index_root=DEPOT_INDEX_DIR,
         item_id=depot_id,
         label=f"Depot {depot_id}",
-        verify_local_hash=False,
     )
 
 def download_workshop(client, workshop_id):
@@ -427,29 +423,14 @@ def download_workshop(client, workshop_id):
         index_root=WORKSHOP_INDEX_DIR,
         item_id=workshop_id,
         label=f"Workshop {workshop_id}",
-        verify_local_hash=False,
     )
 
-def download_files(client, cdn_client, files, destination, verify_local_hash=True, post_download_hook=None, max_workers=4, chunk_size=4 * 1024 * 1024):
-    if verify_local_hash:
-        print(f"Verifying {len(files)} files...")
-
+def download_files(files, destination, post_download_hook=None, max_workers=4, chunk_size=4 * 1024 * 1024, progress_interval=120):
     files_to_download = []
 
-    for i, file in enumerate(files):
+    for file in files:
         file.local = os.path.join(destination, file.filename).lower()
-        if verify_local_hash:
-            if os.path.exists(file.local):
-                with open(file.local, 'rb') as f:
-                    existing_hash = hashlib.sha1(f.read()).hexdigest()
-                    expected_hash = file.sha_content.hex() if isinstance(file.sha_content, bytes) else file.sha_content
-                    if existing_hash == expected_hash:
-                        if file.is_executable:
-                            os.chmod(file.local, 0o755)
-                        continue
-            files_to_download.append(file)
-        else:
-            files_to_download.append(file)
+        files_to_download.append(file)
 
     if not files_to_download:
         print("All files already up to date.")
@@ -471,7 +452,7 @@ def download_files(client, cdn_client, files, destination, verify_local_hash=Tru
 
     def _worker(file_obj):
         nonlocal finished_count
-        success = _download_single_file(file_obj, chunk_size)
+        success = _download_single_file(file_obj, chunk_size, print_lock=print_lock, progress_interval=progress_interval)
         if success and post_download_hook:
             try:
                 with checkpoint_lock:
@@ -510,12 +491,13 @@ def download_files(client, cdn_client, files, destination, verify_local_hash=Tru
     return True
 
 
-def _download_single_file(file, chunk_size):
+def _download_single_file(file, chunk_size, print_lock=None, progress_interval=120):
     if file.local and os.path.dirname(file.local) != "":
         os.makedirs(os.path.dirname(file.local), exist_ok=True)
 
     downloaded = 0
     failed = False
+    last_report = time.time()
 
     with open(file.local, 'wb') as f:
         while downloaded < file.size:
@@ -534,6 +516,17 @@ def _download_single_file(file, chunk_size):
 
             f.write(chunk)
             downloaded += len(chunk)
+
+            now = time.time()
+            if progress_interval > 0 and now - last_report >= progress_interval:
+                percent = (downloaded / file.size * 100) if file.size else 0.0
+                report = f"Progress {file.filename}: {percent:.1f}% ({downloaded}/{file.size} bytes)"
+                if print_lock:
+                    with print_lock:
+                        print(report)
+                else:
+                    print(report)
+                last_report = now
 
     if failed or downloaded < file.size:
         return False

@@ -26,6 +26,32 @@ CDLC_IDS = {
     "ef": 233798
 }
 
+def _get_cdn_client(client, retries=3, base_delay=1.5):
+    """Reuse a CDNClient when possible; retry construction on failure."""
+    global _CACHED_CDN_CLIENT, _CACHED_STEAM_CLIENT_ID
+
+    if _CACHED_CDN_CLIENT and _CACHED_STEAM_CLIENT_ID == id(client):
+        return _CACHED_CDN_CLIENT
+
+    last_error = None
+    for attempt in range(1, retries + 1):
+        try:
+            cdn_client = CDNClient(client)
+            _CACHED_CDN_CLIENT = cdn_client
+            _CACHED_STEAM_CLIENT_ID = id(client)
+            return cdn_client
+        except Exception as exc:
+            last_error = exc
+            print(f"CDNClient init failed (attempt {attempt}/{retries}): {exc}")
+            if attempt < retries:
+                time.sleep(base_delay * attempt)
+
+    print(f"CDNClient could not be initialized after {retries} attempts; giving up. Last error: {last_error}")
+    return None
+
+_CACHED_CDN_CLIENT = None
+_CACHED_STEAM_CLIENT_ID = None
+
 
 def _normalize_path(path):
     return path.replace("\\", "/").lower()
@@ -261,7 +287,10 @@ def save_manifests_to_cache(manifests):
     print(f"Manifest data cached to {MANIFEST_CACHE_FILE}")
 
 def download_depot(client, depot_id):
-    cdn_client = CDNClient(client)
+    cdn_client = _get_cdn_client(client)
+    if not cdn_client:
+        print("Cannot download depot without CDN client; aborting.")
+        return
     
     cached_manifests = load_cached_manifests()
     
@@ -296,7 +325,10 @@ def download_depot(client, depot_id):
     download_files(client, cdn_client, files, destination="server/")
 
 def download_workshop(client, workshop_id):
-    cdn_client = CDNClient(client)
+    cdn_client = _get_cdn_client(client)
+    if not cdn_client:
+        print(f"Cannot download workshop {workshop_id} without CDN client; aborting.")
+        return
     workshop_manifest = cdn_client.get_manifest_for_workshop_item(workshop_id)
     files = [f for f in workshop_manifest.iter_files() if f.is_file]
 

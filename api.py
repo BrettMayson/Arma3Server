@@ -471,7 +471,7 @@ def download_files(client, cdn_client, files, destination, verify_local_hash=Tru
                 return f"{size:.3f} {unit}"
             size /= 1024
 
-    def _worker(worker_id, file_obj):
+    def _worker(file_obj):
         nonlocal finished_count
         success = _download_single_file(file_obj, chunk_size)
         if success and post_download_hook:
@@ -484,14 +484,14 @@ def download_files(client, cdn_client, files, destination, verify_local_hash=Tru
         with print_lock:
             finished_count += 1
             status = "downloaded" if success else "failed"
-            print(f"Worker {worker_id}: {status} {file_obj.filename} ({_human_bytes(file_obj.size)}); done {finished_count}/{len(files_to_download)}")
+            print(f"{finished_count}/{len(files_to_download)}: {status} {file_obj.filename} ({_human_bytes(file_obj.size)})")
         return success
 
     failures = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_map = {}
-        for worker_id, file_obj in enumerate(files_to_download, start=1):
-            future = executor.submit(_worker, worker_id, file_obj)
+        for file_obj in files_to_download:
+            future = executor.submit(_worker, file_obj)
             future_map[future] = file_obj.filename
 
         for future in concurrent.futures.as_completed(future_map):

@@ -453,31 +453,45 @@ def download_files(client, cdn_client, files, destination, verify_local_hash=Tru
         else:
             files_to_download.append(file)
 
-    print(f"Need to download {len(files_to_download)} files...")
-
     if not files_to_download:
         print("All files already up to date.")
         return True
 
-    checkpoint_lock = threading.Lock()
+    print(f"Downloading {len(files_to_download)} of {len(files)} files across {max_workers} workers. {len(files) - len(files_to_download)} already up to date")
 
-    def _worker(idx, total, file_obj):
-        print(f"Downloading {idx}/{total}: {file_obj.filename} ({file_obj.size} bytes)")
+    checkpoint_lock = threading.Lock()
+    print_lock = threading.Lock()
+    finished_count = 0
+
+    def _human_bytes(num_bytes):
+        units = ["B", "KB", "MB", "GB", "TB"]
+        size = float(num_bytes)
+        for unit in units:
+            if size < 1024 or unit == units[-1]:
+                return f"{size:.3f} {unit}"
+            size /= 1024
+
+    def _worker(worker_id, file_obj):
+        nonlocal finished_count
         success = _download_single_file(file_obj, chunk_size)
         if success and post_download_hook:
             try:
                 with checkpoint_lock:
                     post_download_hook(file_obj)
             except Exception:
-                print("Warning: checkpoint hook failed; continuing")
+                with print_lock:
+                    print("Warning: checkpoint hook failed; continuing")
+        with print_lock:
+            finished_count += 1
+            status = "downloaded" if success else "failed"
+            print(f"Worker {worker_id}: {status} {file_obj.filename} ({_human_bytes(file_obj.size)}); done {finished_count}/{len(files_to_download)}")
         return success
 
     failures = []
-    total = len(files_to_download)
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_map = {}
-        for idx, file_obj in enumerate(files_to_download, start=1):
-            future = executor.submit(_worker, idx, total, file_obj)
+        for worker_id, file_obj in enumerate(files_to_download, start=1):
+            future = executor.submit(_worker, worker_id, file_obj)
             future_map[future] = file_obj.filename
 
         for future in concurrent.futures.as_completed(future_map):
@@ -486,7 +500,8 @@ def download_files(client, cdn_client, files, destination, verify_local_hash=Tru
                 if not future.result():
                     failures.append(filename)
             except Exception as exc:
-                print(f"Download crashed for {filename}: {exc}")
+                with print_lock:
+                    print(f"Download crashed for {filename}: {exc}")
                 failures.append(filename)
 
     if failures:
@@ -512,7 +527,6 @@ def _download_single_file(file, chunk_size):
             try:
                 chunk = file.read(read_size)
             except Exception as exc:
-                print(f"Read failed for {file.filename}: {exc}")
                 failed = True
                 break
 
@@ -523,17 +537,11 @@ def _download_single_file(file, chunk_size):
             f.write(chunk)
             downloaded += len(chunk)
 
-            if downloaded % (16 * 1024 * 1024) == 0:
-                percent = (downloaded / file.size) * 100
-                print(f"  Progress {file.filename}: {percent:.1f}% ({downloaded}/{file.size} bytes)")
-
     if failed or downloaded < file.size:
-        print(f"Failed to download {file.filename}")
         return False
 
     if file.is_executable:
         os.chmod(file.local, 0o755)
-    print(f"✓ Downloaded {file.filename}")
     return True
 
 if __name__ == "__main__":

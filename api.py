@@ -12,7 +12,10 @@ MANIFEST_CACHE_FILE = os.path.join(CACHE_DIR, "manifests.json")
 CACHE_EXPIRY_SECONDS = 5 * 60
 
 WORKSHOP_ROOT = "server/workshop"
-WORKSHOP_INDEX_DIR = os.path.join(CACHE_DIR, "workshop-index")
+DEPOT_ROOT = "server"
+INDEX_ROOT = os.path.join(CACHE_DIR, "index")
+WORKSHOP_INDEX_DIR = os.path.join(INDEX_ROOT, "workshop")
+DEPOT_INDEX_DIR = os.path.join(INDEX_ROOT, "depot")
 STATE_VERSION = "1.0"
 COMBINATION_METHOD = "file-hash-asc"
 
@@ -79,12 +82,17 @@ def _combined_mod_hash(file_hashes):
     return digest.hexdigest()
 
 
-def _ensure_mod_state_header(workshop_id, combined_hash="pending"):
-    mod_dir = os.path.join(WORKSHOP_INDEX_DIR, str(workshop_id))
+def _index_paths(index_root, item_id):
+    mod_dir = os.path.join(index_root, str(item_id))
     files_dir = os.path.join(mod_dir, "files")
+    state_file = os.path.join(mod_dir, "state.txt")
+    return mod_dir, files_dir, state_file
+
+
+def _ensure_state_header(index_root, item_id, combined_hash="pending"):
+    mod_dir, files_dir, state_file = _index_paths(index_root, item_id)
     os.makedirs(files_dir, exist_ok=True)
 
-    state_file = os.path.join(mod_dir, "state.txt")
     if os.path.exists(state_file):
         return
 
@@ -94,9 +102,8 @@ def _ensure_mod_state_header(workshop_id, combined_hash="pending"):
         f.write(f"{combined_hash}\n")
 
 
-def _write_file_entry(workshop_id, entry):
-    mod_dir = os.path.join(WORKSHOP_INDEX_DIR, str(workshop_id))
-    files_dir = os.path.join(mod_dir, "files")
+def _write_file_entry(index_root, item_id, entry):
+    _, files_dir, _ = _index_paths(index_root, item_id)
     os.makedirs(files_dir, exist_ok=True)
 
     entry_path = os.path.join(files_dir, f"{entry['file_hash']}.txt")
@@ -108,10 +115,8 @@ def _write_file_entry(workshop_id, entry):
         f_entry.write(f"{entry.get('downloaded_at', 0.0)}\n")
 
 
-def _load_mod_state(workshop_id):
-    mod_dir = os.path.join(WORKSHOP_INDEX_DIR, str(workshop_id))
-    state_file = os.path.join(mod_dir, "state.txt")
-    files_dir = os.path.join(mod_dir, "files")
+def _load_state(index_root, item_id):
+    mod_dir, files_dir, state_file = _index_paths(index_root, item_id)
 
     if not os.path.exists(state_file):
         return None
@@ -154,9 +159,8 @@ def _load_mod_state(workshop_id):
     }
 
 
-def _save_mod_state(workshop_id, combined_hash, files):
-    mod_dir = os.path.join(WORKSHOP_INDEX_DIR, str(workshop_id))
-    files_dir = os.path.join(mod_dir, "files")
+def _save_state(index_root, item_id, combined_hash, files):
+    mod_dir, files_dir, _ = _index_paths(index_root, item_id)
     os.makedirs(files_dir, exist_ok=True)
 
     state_file = os.path.join(mod_dir, "state.txt")
@@ -186,12 +190,12 @@ def _save_mod_state(workshop_id, combined_hash, files):
                 pass
 
 
-def _build_remote_state(workshop_id, files):
+def _build_remote_state(destination_root, files):
     entries = []
     file_map = {}
 
     for file_obj in files:
-        local_path = _normalize_path(os.path.join(WORKSHOP_ROOT, str(workshop_id), file_obj.filename))
+        local_path = _normalize_path(os.path.join(destination_root, file_obj.filename))
         content_hash = _content_hash_hex(file_obj)
         file_hash = _compute_file_hash(local_path, content_hash)
         entry = {
@@ -239,6 +243,78 @@ def _remove_local_files(entries):
                 os.remove(local_path)
         except OSError:
             print(f"Warning: failed to delete {local_path}")
+
+
+def _sync_content(client, cdn_client, files, destination, index_root, item_id, label, verify_local_hash=False):
+    if not files:
+        print(f"{label} has no files in manifest.")
+        return
+
+    remote_state, _ = _build_remote_state(destination, files)
+    local_state = _load_state(index_root, item_id)
+
+    _ensure_state_header(index_root, item_id, combined_hash=local_state.get("combined_hash") if local_state else "pending")
+
+    if local_state and (local_state.get("version") != STATE_VERSION or local_state.get("method") != COMBINATION_METHOD):
+        print(f"{label} index format changed, ignoring cached state.")
+        local_state = None
+
+    if local_state and local_state.get("combined_hash") == remote_state["combined_hash"]:
+        print(f"{label} already matches manifest (combined hash {remote_state['combined_hash']}).")
+        return
+
+    to_download, to_delete, unchanged = _diff_states(remote_state, local_state)
+
+    print(f"{label}: {len(remote_state['files'])} files in manifest.")
+    print(f"  Unchanged: {len(unchanged)} | To download/update: {len(to_download)} | To delete: {len(to_delete)}")
+
+    _remove_local_files(to_delete)
+    _remove_local_files(to_download)
+
+    entry_map = {entry["path"]: entry for entry in to_download}
+
+    if to_download:
+        def _checkpoint(file_obj):
+            path = _normalize_path(file_obj.local)
+            entry = entry_map.get(path)
+            if not entry:
+                return
+            checkpoint = {
+                "path": entry["path"],
+                "file_hash": entry["file_hash"],
+                "content_hash": entry["content_hash"],
+                "size": entry.get("size", 0),
+                "downloaded_at": time.time(),
+            }
+            _write_file_entry(index_root, item_id, checkpoint)
+
+        download_files(
+            client,
+            cdn_client,
+            [entry["file"] for entry in to_download],
+            destination=destination,
+            verify_local_hash=verify_local_hash,
+            post_download_hook=_checkpoint,
+        )
+
+    updated_state = _load_state(index_root, item_id) or {}
+    local_map = {entry["path"]: entry for entry in updated_state.get("files", [])}
+    now = time.time()
+    persisted_files = []
+
+    for entry in remote_state["files"]:
+        previous = local_map.get(entry["path"])
+        timestamp = previous.get("downloaded_at") if previous and previous.get("file_hash") == entry["file_hash"] else now
+        persisted_files.append({
+            "path": entry["path"],
+            "file_hash": entry["file_hash"],
+            "content_hash": entry["content_hash"],
+            "size": entry.get("size", 0),
+            "downloaded_at": timestamp,
+        })
+
+    _save_state(index_root, item_id, remote_state["combined_hash"], persisted_files)
+    print(f"{label} synced. Combined hash: {remote_state['combined_hash']}")
 
 def login(username, password):
     client = SteamClient()
@@ -322,7 +398,16 @@ def download_depot(client, depot_id):
     files = list(files_generator)
     files = [f for f in files if f.is_file]
     print(f"Found {len(files)} files to download")
-    download_files(client, cdn_client, files, destination="server/")
+    _sync_content(
+        client,
+        cdn_client,
+        files,
+        destination=DEPOT_ROOT,
+        index_root=DEPOT_INDEX_DIR,
+        item_id=depot_id,
+        label=f"Depot {depot_id}",
+        verify_local_hash=False,
+    )
 
 def download_workshop(client, workshop_id):
     cdn_client = _get_cdn_client(client)
@@ -331,78 +416,17 @@ def download_workshop(client, workshop_id):
         return
     workshop_manifest = cdn_client.get_manifest_for_workshop_item(workshop_id)
     files = [f for f in workshop_manifest.iter_files() if f.is_file]
-
-    if not files:
-        print(f"Workshop {workshop_id} has no files in manifest.")
-        return
-
-    remote_state, _ = _build_remote_state(workshop_id, files)
-    local_state = _load_mod_state(workshop_id)
-
-    _ensure_mod_state_header(workshop_id, combined_hash=local_state.get("combined_hash") if local_state else "pending")
-
-    if local_state and (local_state.get("version") != STATE_VERSION or local_state.get("method") != COMBINATION_METHOD):
-        print("Local workshop index format changed, ignoring cached state.")
-        local_state = None
-
-    if local_state and local_state.get("combined_hash") == remote_state["combined_hash"]:
-        print(f"Workshop {workshop_id} already matches manifest (combined hash {remote_state['combined_hash']}).")
-        return
-
-    to_download, to_delete, unchanged = _diff_states(remote_state, local_state)
-
-    print(f"Workshop {workshop_id}: {len(remote_state['files'])} files in manifest.")
-    print(f"  Unchanged: {len(unchanged)} | To download/update: {len(to_download)} | To delete: {len(to_delete)}")
-
-    _remove_local_files(to_delete)
-    _remove_local_files(to_download)
-
     destination = os.path.join(WORKSHOP_ROOT, str(workshop_id))
-
-    entry_map = {entry["path"]: entry for entry in to_download}
-
-    if to_download:
-        def _checkpoint(file_obj):
-            path = _normalize_path(file_obj.local)
-            entry = entry_map.get(path)
-            if not entry:
-                return
-            checkpoint = {
-                "path": entry["path"],
-                "file_hash": entry["file_hash"],
-                "content_hash": entry["content_hash"],
-                "size": entry.get("size", 0),
-                "downloaded_at": time.time(),
-            }
-            _write_file_entry(workshop_id, checkpoint)
-
-        download_files(
-            client,
-            cdn_client,
-            [entry["file"] for entry in to_download],
-            destination=destination,
-            verify_local_hash=False,
-            post_download_hook=_checkpoint,
-        )
-
-    updated_state = _load_mod_state(workshop_id) or {}
-    local_map = {entry["path"]: entry for entry in updated_state.get("files", [])}
-    now = time.time()
-    persisted_files = []
-
-    for entry in remote_state["files"]:
-        previous = local_map.get(entry["path"])
-        timestamp = previous.get("downloaded_at") if previous and previous.get("file_hash") == entry["file_hash"] else now
-        persisted_files.append({
-            "path": entry["path"],
-            "file_hash": entry["file_hash"],
-            "content_hash": entry["content_hash"],
-            "size": entry.get("size", 0),
-            "downloaded_at": timestamp,
-        })
-
-    _save_mod_state(workshop_id, remote_state["combined_hash"], persisted_files)
-    print(f"Workshop {workshop_id} synced. Combined hash: {remote_state['combined_hash']}")
+    _sync_content(
+        client,
+        cdn_client,
+        files,
+        destination=destination,
+        index_root=WORKSHOP_INDEX_DIR,
+        item_id=workshop_id,
+        label=f"Workshop {workshop_id}",
+        verify_local_hash=False,
+    )
 
 def download_files(client, cdn_client, files, destination, verify_local_hash=True, post_download_hook=None):
     if verify_local_hash:

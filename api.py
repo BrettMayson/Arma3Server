@@ -7,7 +7,7 @@ import time
 import sys
 
 ARMA3_SERVER_APP_ID = 233780
-CACHE_DIR = "cache"
+CACHE_DIR = "/arma3/cache"
 MANIFEST_CACHE_FILE = os.path.join(CACHE_DIR, "manifests.json")
 CACHE_EXPIRY_SECONDS = 5 * 60
 

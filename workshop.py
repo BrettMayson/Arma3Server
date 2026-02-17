@@ -4,8 +4,7 @@ import subprocess
 import urllib.request
 import shutil
 from urllib.parse import urlparse
-import smbclient
-from smbclient import ClientConfig
+from pathlib import Path
 
 import keys
 import api
@@ -21,19 +20,6 @@ def preset(mod_file, client):
         remote = urllib.request.urlopen(req)
         with open("preset.html", "wb") as f:
             f.write(remote.read())
-        mod_file = "preset.html"
-    elif mod_file.startswith("smb://"):
-        # Parse SMB URL and setup anonymous/guest connection
-        parsed = urlparse(mod_file)
-        server = parsed.hostname
-        # Configure client to disable encryption and signing for guest access
-        ClientConfig(require_signing=False, require_encryption=False)
-        # Register guest session for anonymous access
-        smbclient.register_session(server, username='guest', password='')
-        
-        with smbclient.open_file(mod_file, mode='rb') as remote:
-            with open("preset.html", "wb") as f:
-                f.write(remote.read())
         mod_file = "preset.html"
     mods = []
     moddirs = []

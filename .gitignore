@@ -2,3 +2,5 @@
 server/**
 servermods/**
 mods/**
+configs/**
+cache/**

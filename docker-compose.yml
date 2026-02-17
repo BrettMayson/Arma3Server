@@ -1,6 +1,8 @@
 services:
   arma3:
     build: .
+    #image: ghcr.io/brettmayson/arma3server/arma3server:v2
+    user: 1001:1001
     platform: linux/amd64
     container_name: arma3
     ports:
@@ -13,6 +15,7 @@ services:
       - './mods:/arma3/server/mods'
       - './servermods:/arma3/server/servermods'
       - './server:/arma3/server/'
+      - './cache:/arma3/cache'
     env_file: .env
     restart: unless-stopped
 volumes:

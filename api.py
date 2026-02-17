@@ -5,6 +5,8 @@ import hashlib
 import json
 import time
 import sys
+import threading
+import concurrent.futures
 
 ARMA3_SERVER_APP_ID = 233780
 CACHE_DIR = "/arma3/cache"
@@ -428,13 +430,14 @@ def download_workshop(client, workshop_id):
         verify_local_hash=False,
     )
 
-def download_files(client, cdn_client, files, destination, verify_local_hash=True, post_download_hook=None):
+def download_files(client, cdn_client, files, destination, verify_local_hash=True, post_download_hook=None, max_workers=4, chunk_size=4 * 1024 * 1024):
     if verify_local_hash:
         print(f"Verifying {len(files)} files...")
     else:
         print(f"Skipping local hash verification for {len(files)} files (using manifest state)...")
+
     files_to_download = []
-    
+
     for i, file in enumerate(files):
         file.local = os.path.join(destination, file.filename).lower()
         if verify_local_hash:
@@ -449,28 +452,58 @@ def download_files(client, cdn_client, files, destination, verify_local_hash=Tru
             files_to_download.append(file)
         else:
             files_to_download.append(file)
-    
+
     print(f"Need to download {len(files_to_download)} files...")
-    
-    for i, file in enumerate(files_to_download):
-        print(f"Downloading {i+1}/{len(files_to_download)}: {file.filename} ({file.size} bytes)")
-        success = _download_single_file(file)
+
+    if not files_to_download:
+        print("All files already up to date.")
+        return True
+
+    checkpoint_lock = threading.Lock()
+
+    def _worker(idx, total, file_obj):
+        print(f"Downloading {idx}/{total}: {file_obj.filename} ({file_obj.size} bytes)")
+        success = _download_single_file(file_obj, chunk_size)
         if success and post_download_hook:
             try:
-                post_download_hook(file)
+                with checkpoint_lock:
+                    post_download_hook(file_obj)
             except Exception:
                 print("Warning: checkpoint hook failed; continuing")
-            
-    print("All files downloaded successfully.")
+        return success
 
-def _download_single_file(file):
+    failures = []
+    total = len(files_to_download)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_map = {}
+        for idx, file_obj in enumerate(files_to_download, start=1):
+            future = executor.submit(_worker, idx, total, file_obj)
+            future_map[future] = file_obj.filename
+
+        for future in concurrent.futures.as_completed(future_map):
+            filename = future_map[future]
+            try:
+                if not future.result():
+                    failures.append(filename)
+            except Exception as exc:
+                print(f"Download crashed for {filename}: {exc}")
+                failures.append(filename)
+
+    if failures:
+        print(f"Failed downloads: {len(failures)} => {failures}")
+        return False
+
+    print("All files downloaded successfully.")
+    return True
+
+
+def _download_single_file(file, chunk_size):
     if file.local and os.path.dirname(file.local) != "":
         os.makedirs(os.path.dirname(file.local), exist_ok=True)
-    
-    chunk_size = 1024 * 1024  # 1MB chunks
+
     downloaded = 0
     failed = False
-    
+
     with open(file.local, 'wb') as f:
         while downloaded < file.size:
             remaining = file.size - downloaded
@@ -478,29 +511,30 @@ def _download_single_file(file):
 
             try:
                 chunk = file.read(read_size)
-            except Exception:
+            except Exception as exc:
+                print(f"Read failed for {file.filename}: {exc}")
                 failed = True
                 break
 
             if not chunk:
                 failed = True
                 break
-            
+
             f.write(chunk)
             downloaded += len(chunk)
-            
-            if downloaded % (10 * 1024 * 1024) == 0:
+
+            if downloaded % (16 * 1024 * 1024) == 0:
                 percent = (downloaded / file.size) * 100
-                print(f"  Progress: {percent:.1f}% ({downloaded}/{file.size} bytes)")
-                
+                print(f"  Progress {file.filename}: {percent:.1f}% ({downloaded}/{file.size} bytes)")
+
     if failed or downloaded < file.size:
         print(f"Failed to download {file.filename}")
         return False
-    else:
-        if file.is_executable:
-            os.chmod(file.local, 0o755)
-        print(f"✓ Downloaded {file.filename}")
-        return True
+
+    if file.is_executable:
+        os.chmod(file.local, 0o755)
+    print(f"✓ Downloaded {file.filename}")
+    return True
 
 if __name__ == "__main__":
     import os

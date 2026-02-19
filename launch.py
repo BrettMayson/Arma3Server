@@ -52,31 +52,31 @@ if not os.path.isdir(KEYS):
         os.remove(KEYS)
     os.makedirs(KEYS)
 
-client = None
+session = None
 if os.environ["SKIP_INSTALL"] in ["", "false"]:
-    client = api.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"])
-    if not client:
+    session = api.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], config=api_config)
+    if not session:
         print("Failed to login to Steam, exiting...")
         exit(1)
-    api.download_depot(client, 233781, config=api_config) # Default Content
-    api.download_depot(client, 233783, config=api_config) # Linux Server
+    api.download_depot(session, 233781, config=api_config) # Default Content
+    api.download_depot(session, 233783, config=api_config) # Linux Server
     if os.environ["ARMA_BINARY"] == "arma3serverprofiling_x64":
-        api.download_depot(client, 233785, config=api_config) # Arma 3 Profiling
+        api.download_depot(session, 233785, config=api_config) # Arma 3 Profiling
 
     for cdlc in os.environ["ARMA_CDLC"].split(";"):
         if cdlc:
             cdlc = cdlc.lower()
             print("Downloading CDLC:", cdlc)
-            api.download_depot(client, api.CDLC_IDS[cdlc], config=api_config)
+            api.download_depot(session, api.CDLC_IDS[cdlc], config=api_config)
 
 # Mods
 
 mods = []
 
 if os.environ["MODS_PRESET"] != "":
-    if not client:
-        client = api.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"])
-    mods.extend(workshop.preset(os.environ["MODS_PRESET"], client, config=api_config))
+    if not session:
+        session = api.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], config=api_config)
+    mods.extend(workshop.preset(os.environ["MODS_PRESET"], session, config=api_config))
 
 if os.environ["MODS_LOCAL"] == "true" and os.path.exists("mods"):
     mods.extend(local.mods("mods"))

@@ -9,6 +9,7 @@ import threading
 import concurrent.futures
 
 ARMA3_SERVER_APP_ID = 233780
+SESSION_RESET_THRESHOLD = 3  # Consecutive failures before full session reset
 CACHE_DIR = "/arma3/cache"
 MANIFEST_CACHE_FILE = os.path.join(CACHE_DIR, "manifests.json")
 CACHE_EXPIRY_SECONDS = 5 * 60
@@ -40,6 +41,205 @@ CDLC_IDS = {
     "rf": 233799,
     "ef": 233798
 }
+
+
+class SteamSession:
+    """Facade wrapping Steam and CDN clients with automatic session reset on consecutive failures.
+    
+    After SESSION_RESET_THRESHOLD consecutive failures, performs a full session reset
+    (new SteamClient, new login, new CDNClient) to recover from transient Steam API issues.
+    """
+
+    def __init__(self, username, password, config=None):
+        """Initialize session with credentials but don't connect yet.
+        
+        Args:
+            username: Steam username.
+            password: Steam password.
+            config: Optional config map for retry/download tuning.
+        """
+        self._username = username
+        self._password = password
+        self._config = config
+        self._client = None
+        self._cdn_client = None
+        self._consecutive_failures = 0
+        self._lock = threading.Lock()
+
+    def _reset_session(self):
+        """Perform full session reset: new SteamClient, login, and CDNClient."""
+        print("Performing full Steam session reset...")
+        self._client = None
+        self._cdn_client = None
+        self._consecutive_failures = 0
+        
+        # Clear cached CDN client
+        global _CACHED_CDN_CLIENT, _CACHED_STEAM_CLIENT_ID
+        _CACHED_CDN_CLIENT = None
+        _CACHED_STEAM_CLIENT_ID = None
+        
+        self._ensure_connected()
+
+    def _ensure_connected(self):
+        """Ensure Steam client is logged in and CDN client is available."""
+        if self._client is None:
+            self._client = SteamClient()
+            self._client.login(self._username, self._password)
+            print("Logged in to Steam as", self._client.user.name)
+        
+        if self._cdn_client is None:
+            resolved = _resolve_config(self._config)
+            self._cdn_client = _get_cdn_client(self._client, resolved)
+            if self._cdn_client is None:
+                raise RuntimeError("Failed to initialize CDN client")
+
+    def _record_success(self):
+        """Record a successful operation, resetting failure counter."""
+        with self._lock:
+            self._consecutive_failures = 0
+
+    def _record_failure(self):
+        """Record a failed operation, potentially triggering session reset.
+        
+        Returns:
+            True if session was reset and caller should retry.
+        """
+        with self._lock:
+            self._consecutive_failures += 1
+            if self._consecutive_failures >= SESSION_RESET_THRESHOLD:
+                print(f"Hit {self._consecutive_failures} consecutive failures, resetting session...")
+                self._reset_session()
+                return True
+            return False
+
+    def _execute_cdn_op(self, op_name, func, *args, **kwargs):
+        """Execute a CDN operation with retry and session reset logic.
+        
+        Args:
+            op_name: Label for logging.
+            func: Callable that takes (cdn_client, *args, **kwargs).
+            *args: Positional args for the callable.
+            **kwargs: Keyword args for the callable.
+            
+        Returns:
+            The callable result.
+            
+        Raises:
+            RuntimeError: if all attempts including session resets failed.
+        """
+        resolved = _resolve_config(self._config)
+        retries = resolved["cdn_op_retries"]
+        base_delay = resolved["cdn_op_base_delay"]
+        
+        # Allow up to 2 full session resets
+        max_session_resets = 2
+        session_reset_count = 0
+        
+        while session_reset_count <= max_session_resets:
+            self._ensure_connected()
+            last_error = None
+            
+            for attempt in range(1, retries + 1):
+                try:
+                    result = func(self._cdn_client, *args, **kwargs)
+                    self._record_success()
+                    return result
+                except Exception as exc:
+                    last_error = exc
+                    print(f"{op_name} failed (attempt {attempt}/{retries}): {exc}")
+                    
+                    should_retry = self._record_failure()
+                    if should_retry:
+                        session_reset_count += 1
+                        print(f"Session reset #{session_reset_count}, retrying {op_name}...")
+                        break  # Break inner loop to restart with new session
+                    
+                    if attempt < retries:
+                        time.sleep(base_delay * attempt)
+            else:
+                # Exhausted retries without session reset trigger
+                raise RuntimeError(f"{op_name} failed after {retries} attempts: {last_error}")
+        
+        raise RuntimeError(f"{op_name} failed after {max_session_resets} session resets: {last_error}")
+
+    def get_manifests(self, app_id, branch="creatordlc"):
+        """Get manifests for an app from CDN.
+        
+        Args:
+            app_id: Steam app ID.
+            branch: Branch name.
+            
+        Returns:
+            List of manifest objects.
+        """
+        return self._execute_cdn_op(
+            "get_manifests",
+            lambda cdn, *a, **kw: cdn.get_manifests(*a, **kw),
+            app_id,
+            branch=branch,
+        )
+
+    def iter_files(self, app_id, branch="creatordlc", filter_func=None):
+        """Iterate files for an app from CDN.
+        
+        Args:
+            app_id: Steam app ID.
+            branch: Branch name.
+            filter_func: Optional filter function for depots.
+            
+        Returns:
+            List of file objects.
+        """
+        return self._execute_cdn_op(
+            "iter_files",
+            lambda cdn, *a, **kw: list(cdn.iter_files(*a, **kw)),
+            app_id,
+            branch=branch,
+            filter_func=filter_func,
+        )
+
+    def get_manifest_for_workshop_item(self, workshop_id):
+        """Get manifest for a workshop item.
+        
+        Args:
+            workshop_id: Workshop item ID.
+            
+        Returns:
+            Manifest object for the workshop item.
+        """
+        return self._execute_cdn_op(
+            "get_manifest_for_workshop_item",
+            lambda cdn, wid: cdn.get_manifest_for_workshop_item(wid),
+            workshop_id,
+        )
+
+    @property 
+    def client(self):
+        """Return underlying SteamClient (for backwards compatibility)."""
+        self._ensure_connected()
+        return self._client
+
+    @property
+    def user(self):
+        """Return Steam user info."""
+        self._ensure_connected()
+        return self._client.user
+
+
+def create_session(username, password, config=None):
+    """Create and connect a new SteamSession.
+    
+    Args:
+        username: Steam username.
+        password: Steam password.
+        config: Optional config map.
+        
+    Returns:
+        Connected SteamSession instance.
+    """
+    session = SteamSession(username, password, config=config)
+    session._ensure_connected()
+    return session
 
 
 def _resolve_config(config=None):
@@ -86,42 +286,6 @@ def _get_cdn_client(client, config=None):
 
 _CACHED_CDN_CLIENT = None
 _CACHED_STEAM_CLIENT_ID = None
-
-
-def _retry_cdn_op(op_name, func, *args, retries=3, base_delay=1.5, **kwargs):
-    """Run a CDNClient operation with retries and linear backoff.
-
-    Args:
-        op_name: Label for logging.
-        func: Callable to execute.
-        *args: Positional args for the callable.
-        retries: Maximum attempts (overrides config if provided).
-        base_delay: Seconds base delay; multiplied by attempt number.
-        config: Optional config map supplying retry defaults.
-        **kwargs: Keyword args for the callable.
-
-    Returns:
-        The callable result.
-
-    Raises:
-        RuntimeError: if all attempts failed.
-    """
-    resolved = _resolve_config(kwargs.pop("config", None))
-    retries = kwargs.pop("retries", retries)
-    base_delay = kwargs.pop("base_delay", base_delay)
-    retries = retries if retries is not None else resolved["cdn_op_retries"]
-    base_delay = base_delay if base_delay is not None else resolved["cdn_op_base_delay"]
-
-    last_error = None
-    for attempt in range(1, retries + 1):
-        try:
-            return func(*args, **kwargs)
-        except Exception as exc:
-            last_error = exc
-            print(f"{op_name} failed (attempt {attempt}/{retries}): {exc}")
-            if attempt < retries:
-                time.sleep(base_delay * attempt)
-    raise RuntimeError(f"{op_name} failed after {retries} attempts: {last_error}")
 
 
 def _normalize_path(path):
@@ -412,20 +576,18 @@ def _sync_content(files, destination, index_root, item_id, label, config=None):
     _save_state(index_root, item_id, remote_state["combined_hash"], persisted_files)
     print(f"{label} synced. Combined hash: {remote_state['combined_hash']}")
 
-def login(username, password):
-    """Log in to Steam and return an authenticated SteamClient.
+def login(username, password, config=None):
+    """Log in to Steam and return a SteamSession with automatic session reset.
 
     Args:
         username: Steam username.
         password: Steam password.
+        config: Optional config map for retry/download tuning.
 
     Returns:
-        Authenticated SteamClient instance.
+        Connected SteamSession instance.
     """
-    client = SteamClient()
-    client.login(username, password)
-    print("Logged in to Steam as", client.user.name)
-    return client
+    return create_session(username, password, config=config)
 
 def load_cached_manifests():
     """Load cached manifest data if present and fresh.
@@ -475,21 +637,15 @@ def save_manifests_to_cache(manifests):
     
     print(f"Manifest data cached to {MANIFEST_CACHE_FILE}")
 
-def download_depot(client, depot_id, config=None):
-    """Sync a depot by manifest, using cached CDN client and indexed state.
+def download_depot(session, depot_id, config=None):
+    """Sync a depot by manifest, using SteamSession with automatic retry/reset.
 
     Args:
-        client: Authenticated SteamClient instance.
+        session: SteamSession instance.
         depot_id: Depot ID to sync.
         config: Config map for retries/download tuning.
     """
     resolved_config = _resolve_config(config)
-
-    cdn_client = _get_cdn_client(client, resolved_config)
-    if not cdn_client:
-        print("Cannot download depot without CDN client; aborting.")
-        return
-    
     cached_manifests = load_cached_manifests()
     
     if cached_manifests:
@@ -497,7 +653,7 @@ def download_depot(client, depot_id, config=None):
         print("Got manifests from cache for ARMA3 server app ID:", ARMA3_SERVER_APP_ID)
     else:
         print("Fetching fresh manifests from Steam...")
-        manifests_obj = _retry_cdn_op("get_manifests", cdn_client.get_manifests, ARMA3_SERVER_APP_ID, branch="creatordlc", config=resolved_config)
+        manifests_obj = session.get_manifests(ARMA3_SERVER_APP_ID, branch="creatordlc")
         
         save_manifests_to_cache(manifests_obj)
         
@@ -516,14 +672,10 @@ def download_depot(client, depot_id, config=None):
     
     print(f"Downloading Manifest ID: {target_manifest['gid']}, Depot ID: {target_manifest['depot_id']}")
 
-    files = _retry_cdn_op(
-        "iter_files",
-        lambda: list(cdn_client.iter_files(
-            ARMA3_SERVER_APP_ID,
-            branch="creatordlc",
-            filter_func=lambda d_id, depot_info: d_id == target_manifest['depot_id'],
-        )),
-        config=resolved_config,
+    files = session.iter_files(
+        ARMA3_SERVER_APP_ID,
+        branch="creatordlc",
+        filter_func=lambda d_id, depot_info: d_id == target_manifest['depot_id'],
     )
     files = [f for f in files if f.is_file]
     print(f"Found {len(files)} files to download")
@@ -536,21 +688,16 @@ def download_depot(client, depot_id, config=None):
         config=resolved_config,
     )
 
-def download_workshop(client, workshop_id, config=None):
+def download_workshop(session, workshop_id, config=None):
     """Sync a workshop item by manifest with indexed incremental updates.
 
     Args:
-        client: Authenticated SteamClient instance.
+        session: SteamSession instance.
         workshop_id: Workshop ID to sync.
         config: Config map for retries/download tuning.
     """
     resolved_config = _resolve_config(config)
-
-    cdn_client = _get_cdn_client(client, resolved_config)
-    if not cdn_client:
-        print(f"Cannot download workshop {workshop_id} without CDN client; aborting.")
-        return
-    workshop_manifest = _retry_cdn_op("get_manifest_for_workshop_item", cdn_client.get_manifest_for_workshop_item, workshop_id, config=resolved_config)
+    workshop_manifest = session.get_manifest_for_workshop_item(workshop_id)
     files = [f for f in workshop_manifest.iter_files() if f.is_file]
     destination = os.path.join(WORKSHOP_ROOT, str(workshop_id))
     _sync_content(

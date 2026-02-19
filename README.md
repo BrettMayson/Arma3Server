@@ -85,15 +85,15 @@ services:
     container_name: arma3
     image: ghcr.io/brettmayson/arma3server/arma3server:v2
     secrets:
-     - STEAM_USER
-     - STEAM_PASSWORD
-     ...
+      - STEAM_USER
+      - STEAM_PASSWORD
+      ...
 
 secrets:
-    STEAM_USER: 
-        file: /etc/docker/my_steam_user_file
-    STEAM_PASSWORD: 
-        file: /etc/docker/my_steam_password_file
+  STEAM_USER:
+    file: /etc/docker/my_steam_user_file
+  STEAM_PASSWORD:
+    file: /etc/docker/my_steam_password_file
 ```
 
 

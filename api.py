@@ -288,6 +288,16 @@ _CACHED_CDN_CLIENT = None
 _CACHED_STEAM_CLIENT_ID = None
 
 
+def _human_bytes(num_bytes):
+    """Format byte count as human-readable string."""
+    units = ["B", "KB", "MB", "GB", "TB"]
+    size = float(num_bytes)
+    for unit in units:
+        if size < 1024 or unit == units[-1]:
+            return f"{size:.3f} {unit}"
+        size /= 1024
+
+
 def _normalize_path(path):
     """Normalize a filesystem path to lowercase forward-slash form."""
     return path.replace("\\", "/").lower()
@@ -741,14 +751,6 @@ def download_files(files, destination, post_download_hook=None, config=None):
     print_lock = threading.Lock()
     finished_count = 0
 
-    def _human_bytes(num_bytes):
-        units = ["B", "KB", "MB", "GB", "TB"]
-        size = float(num_bytes)
-        for unit in units:
-            if size < 1024 or unit == units[-1]:
-                return f"{size:.3f} {unit}"
-            size /= 1024
-
     def _worker(file_obj):
         nonlocal finished_count
         success = _download_single_file(file_obj, chunk_size, print_lock=print_lock, progress_interval=progress_interval)
@@ -830,7 +832,7 @@ def _download_single_file(file, chunk_size, print_lock=None, progress_interval=6
             now = time.time()
             if progress_interval > 0 and now - last_report >= progress_interval:
                 percent = (downloaded / file.size * 100) if file.size else 0.0
-                report = f"Progress {file.filename}: {percent:.1f}% ({downloaded}/{file.size} bytes)"
+                report = f"Progress {file.filename}: {percent:.1f}% ({_human_bytes(downloaded)}/{_human_bytes(file.size)})"
                 if print_lock:
                     with print_lock:
                         print(report)

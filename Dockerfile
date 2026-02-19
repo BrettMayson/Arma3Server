@@ -60,5 +60,6 @@ VOLUME /arma3/server
 STOPSIGNAL SIGINT
 
 COPY *.py /
+COPY api/ /api/
 
 CMD ["python3","/launch.py"]

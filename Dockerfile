@@ -19,6 +19,7 @@ RUN apt-get update \
         libssl3 \
         libc6 \
         git \
+        net-tools \
     && \
     apt-get remove --purge -y \
     && \

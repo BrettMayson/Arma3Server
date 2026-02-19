@@ -1,8 +1,6 @@
 services:
   arma3:
     build: .
-    #image: ghcr.io/brettmayson/arma3server/arma3server:v2
-    user: 1001:1001
     platform: linux/amd64
     container_name: arma3
     ports:

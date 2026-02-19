@@ -132,7 +132,7 @@ class ContentSyncer:
             local_state = None
 
         if local_state and local_state.get("combined_hash") == remote_state["combined_hash"]:
-            print(f"{label} already matches manifest (combined hash {remote_state['combined_hash']}).")
+            print(f"{label} is up-to-date (combined hash {remote_state['combined_hash']}).")
             return
 
         to_download, to_delete, unchanged = diff_states(remote_state, local_state)

@@ -132,7 +132,14 @@ class ContentSyncer:
             local_state = None
 
         if local_state and local_state.get("combined_hash") == remote_state["combined_hash"]:
-            print(f"{label} is up-to-date (combined hash {remote_state['combined_hash']}).")
+            short_hash = remote_state["combined_hash"][:7]
+            updated_at = local_state.get("updated_at", 0)
+            if updated_at:
+                from datetime import datetime
+                date_str = datetime.fromtimestamp(updated_at).strftime("%Y-%m-%d %H:%M")
+                print(f"{label} is up-to-date (commit {short_hash}, last updated {date_str}).")
+            else:
+                print(f"{label} is up-to-date (commit {short_hash}).")
             return
 
         to_download, to_delete, unchanged = diff_states(remote_state, local_state)
@@ -184,4 +191,4 @@ class ContentSyncer:
             })
 
         self.state_manager.save_state(item_id, remote_state["combined_hash"], persisted_files)
-        print(f"{label} synced. Combined hash: {remote_state['combined_hash']}")
+        print(f"{label} synced (commit {remote_state['combined_hash'][:7]}).")

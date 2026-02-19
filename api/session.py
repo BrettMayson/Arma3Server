@@ -285,7 +285,6 @@ class SteamSession:
             filter_func=lambda d_id, depot_info: d_id == target_manifest['depot_id'],
         )
         files = [f for f in files if f.is_file]
-        print(f"Manifest lists {len(files)} files for Depot {depot_id}.")
         
         syncer = ContentSyncer(DEPOT_INDEX_DIR, config=resolved_config)
         syncer.sync(files, DEPOT_ROOT, depot_id, f"Depot {depot_id}")
@@ -299,7 +298,6 @@ class SteamSession:
         resolved_config = resolve_config(self._config)
         workshop_manifest = self.get_manifest_for_workshop_item(workshop_id)
         files = [f for f in workshop_manifest.iter_files() if f.is_file]
-        print(f"Manifest lists {len(files)} files for Workshop {workshop_id}.")
         destination = os.path.join(WORKSHOP_ROOT, str(workshop_id))
         
         syncer = ContentSyncer(WORKSHOP_INDEX_DIR, config=resolved_config)

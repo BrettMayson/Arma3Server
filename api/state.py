@@ -54,18 +54,21 @@ class StateManager:
         state_file = os.path.join(mod_dir, "state.txt")
         return mod_dir, files_dir, state_file
 
-    def ensure_state_header(self, item_id, combined_hash="pending"):
+    def ensure_state_header(self, item_id, combined_hash="pending", updated_at=None):
         """Ensure the state.txt header exists for an item index."""
+        import time
         mod_dir, files_dir, state_file = self._index_paths(item_id)
         os.makedirs(files_dir, exist_ok=True)
 
         if os.path.exists(state_file):
             return
 
+        timestamp = updated_at if updated_at is not None else time.time()
         with open(state_file, "w") as f:
             f.write(f"{STATE_VERSION}\n")
             f.write(f"{COMBINATION_METHOD}\n")
             f.write(f"{combined_hash}\n")
+            f.write(f"{timestamp}\n")
 
     def write_file_entry(self, item_id, entry):
         """Write a single file entry checkpoint into the index."""
@@ -104,6 +107,7 @@ class StateManager:
             return None
 
         version, method, combined_hash = rows[0], rows[1], rows[2]
+        updated_at = float(rows[3]) if len(rows) > 3 and rows[3] else 0.0
         files = []
 
         if os.path.isdir(files_dir):
@@ -128,19 +132,23 @@ class StateManager:
             "version": version,
             "method": method,
             "combined_hash": combined_hash,
+            "updated_at": updated_at,
             "files": files,
         }
 
-    def save_state(self, item_id, combined_hash, files):
+    def save_state(self, item_id, combined_hash, files, updated_at=None):
         """Persist state header and file checkpoints for an item."""
+        import time
         mod_dir, files_dir, _ = self._index_paths(item_id)
         os.makedirs(files_dir, exist_ok=True)
 
+        timestamp = updated_at if updated_at is not None else time.time()
         state_file = os.path.join(mod_dir, "state.txt")
         with open(state_file, "w") as f:
             f.write(f"{STATE_VERSION}\n")
             f.write(f"{COMBINATION_METHOD}\n")
             f.write(f"{combined_hash}\n")
+            f.write(f"{timestamp}\n")
 
         keep_hashes = set()
         for entry in files:

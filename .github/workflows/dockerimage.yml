@@ -17,4 +17,4 @@ jobs:
     - name: Copy .env file
       run: cp .env.example .env
     - name: Build the Docker image
-      run: docker-compose build
+      run: docker compose build

@@ -13,12 +13,3 @@ services:
       - './server:/arma3/server/'
     env_file: .env
     restart: unless-stopped
-volumes:
-  addons:
-  argo:
-  enoch:
-  expansion:
-  heli:
-  jets:
-  orange:
-  steamcmd:

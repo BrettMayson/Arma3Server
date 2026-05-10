@@ -1,1 +1,6 @@
 .env
+server/**
+servermods/**
+mods/**
+configs/**
+cache/**

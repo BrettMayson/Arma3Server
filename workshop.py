@@ -3,13 +3,23 @@ import re
 import subprocess
 import urllib.request
 import shutil
+from urllib.parse import urlparse
+from pathlib import Path
 
 import keys
-import api
 
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36"  # noqa: E501
 
-def preset(mod_file, client):
+def preset(mod_file, session):
+    """Download mods from a preset HTML file.
+    
+    Args:
+        mod_file: Path or URL to the preset HTML file.
+        session: SteamSession instance for downloading mods.
+        
+    Returns:
+        List of mod directory paths.
+    """
     if mod_file.startswith("http"):
         req = urllib.request.Request(
             mod_file,
@@ -27,7 +37,7 @@ def preset(mod_file, client):
         matches = re.finditer(regex, html, re.MULTILINE)
         for _, match in enumerate(matches, start=1):
             mods.append(match.group(1))
-            api.download_workshop(client, int(match.group(1)))
+            session.download_workshop(int(match.group(1)))
             moddirs.append("workshop/" + match.group(1))
         for moddir in moddirs:
             keys.copy("server/"+moddir)

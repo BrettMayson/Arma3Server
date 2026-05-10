@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 LABEL maintainer="Brett - github.com/brettmayson"
 LABEL org.opencontainers.image.source=https://github.com/brettmayson/arma3server
@@ -19,6 +19,7 @@ RUN apt-get update \
         libssl3 \
         libc6 \
         git \
+        net-tools \
     && \
     apt-get remove --purge -y \
     && \
@@ -51,7 +52,6 @@ EXPOSE 2302/udp
 EXPOSE 2303/udp
 EXPOSE 2304/udp
 EXPOSE 2305/udp
-EXPOSE 2306/udp
 
 WORKDIR /arma3
 
@@ -60,5 +60,6 @@ VOLUME /arma3/server
 STOPSIGNAL SIGINT
 
 COPY *.py /
+COPY api/ /api/
 
 CMD ["python3","/launch.py"]

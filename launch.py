@@ -16,8 +16,34 @@ def mod_param(name, mods):
 def env_defined(key):
     return key in os.environ and len(os.environ[key]) > 0
 
+
+def env_int(key, default):
+    value = os.environ.get(key)
+    try:
+        return int(value) if value not in [None, ""] else default
+    except ValueError:
+        return default
+
+
+def env_float(key, default):
+    value = os.environ.get(key)
+    try:
+        return float(value) if value not in [None, ""] else default
+    except ValueError:
+        return default
+
 CONFIG_FILE = os.environ["ARMA_CONFIG"]
 KEYS = "/arma3/server/keys"
+
+api_config = {
+    "cdn_client_retries": env_int("ARMA_CDN_CLIENT_RETRIES", 3),
+    "cdn_client_base_delay": env_float("ARMA_CDN_CLIENT_BASE_DELAY", 1.5),
+    "cdn_op_retries": env_int("ARMA_CDN_OP_RETRIES", 3),
+    "cdn_op_base_delay": env_float("ARMA_CDN_OP_BASE_DELAY", 1.5),
+    "download_max_workers": env_int("ARMA_DOWNLOAD_MAX_WORKERS", 4),
+    "download_chunk_size": env_int("ARMA_DOWNLOAD_CHUNK_SIZE", 4 * 1024 * 1024),
+    "download_progress_interval": env_int("ARMA_DOWNLOAD_PROGRESS_INTERVAL", 60),
+}
 
 if env_defined("CLEAR_KEYS") and os.environ["CLEAR_KEYS"] == "true" and os.path.isdir(KEYS):
     shutil.rmtree(KEYS)
@@ -26,31 +52,31 @@ if not os.path.isdir(KEYS):
         os.remove(KEYS)
     os.makedirs(KEYS)
 
-client = None
+session = None
 if os.environ["SKIP_INSTALL"] in ["", "false"]:
-    client = api.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"])
-    if not client:
+    session = api.SteamSession.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], config=api_config)
+    if not session:
         print("Failed to login to Steam, exiting...")
         exit(1)
-    api.download_depot(client, 233781) # Default Content
-    api.download_depot(client, 233783) # Linux Server
+    session.download_depot(233781) # Default Content
+    session.download_depot(233783) # Linux Server
     if os.environ["ARMA_BINARY"] == "arma3serverprofiling_x64":
-        api.download_depot(client, 233785) # Arma 3 Profiling
+        session.download_depot(233785) # Arma 3 Profiling
 
     for cdlc in os.environ["ARMA_CDLC"].split(";"):
         if cdlc:
             cdlc = cdlc.lower()
             print("Downloading CDLC:", cdlc)
-            api.download_depot(client, api.CDLC_IDS[cdlc])
+            session.download_depot(api.CDLC_IDS[cdlc])
 
 # Mods
 
 mods = []
 
 if os.environ["MODS_PRESET"] != "":
-    if not client:
-        client = api.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"])
-    mods.extend(workshop.preset(os.environ["MODS_PRESET"], client))
+    if not session:
+        session = api.SteamSession.login(os.environ["STEAM_USER"], os.environ["STEAM_PASSWORD"], config=api_config)
+    mods.extend(workshop.preset(os.environ["MODS_PRESET"], session))
 
 if os.environ["MODS_LOCAL"] == "true" and os.path.exists("mods"):
     mods.extend(local.mods("mods"))
@@ -118,5 +144,7 @@ if os.path.exists("servermods"):
     launch += mod_param("serverMod", local.mods("servermods"))
 
 print("LAUNCHING ARMA SERVER WITH", launch, flush=True)
+# ensure binary is executable (chmod +x) before launching
+os.chmod("/arma3/server/{}".format(os.environ["ARMA_BINARY"]), 0o755)
 os.chdir("/arma3/server")
 os.system(launch)

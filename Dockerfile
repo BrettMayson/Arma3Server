@@ -19,6 +19,7 @@ RUN apt-get update \
         libssl3 \
         libc6 \
         git \
+        libavahi-client3 \
     && \
     apt-get remove --purge -y \
     && \

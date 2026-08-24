@@ -112,7 +112,7 @@ profile = "$profile-hc-$i"
 
 ## Creator DLC
 
-To use a Creator DLC the `STEAM_BRANCH` must be set to `creatordlc`
+You do not need to be on the `creatordlc` branch to use a CDLC. Using that branch will download all the CDLCs, but you can also use the `public` branch and specify which CDLCs to load with the `ARMA3_SERVER__CDLC` environment variable. Only the specified CDLCs will be downloaded and loaded by the server.
 
 | Name | Flag |
 | ---- | ---- |

@@ -1,3 +1,10 @@
+FROM rust:1-bookworm AS builder
+
+WORKDIR /build
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+RUN cargo build --release
+
 FROM debian:bookworm-slim
 
 LABEL maintainer="Brett - github.com/brettmayson"
@@ -7,21 +14,14 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
     && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-        python3 \
-        python3-pip \
         lib32stdc++6 \
         lib32gcc-s1 \
         libcurl4 \
-        wget \
         ca-certificates \
-        curl \
         libstdc++6 \
         libssl3 \
         libc6 \
-        git \
         libavahi-client3 \
-    && \
-    apt-get remove --purge -y \
     && \
     apt-get clean autoclean \
     && \
@@ -29,24 +29,24 @@ RUN apt-get update \
     && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install -U zstandard "git+https://github.com/brettmayson/valvepythonsteam#egg=steam[client]" --break-system-packages
+COPY --from=builder /build/target/release/arma3server /usr/local/bin/arma3server
 
-ENV PYTHONUNBUFFERED=1
+ENV RUST_LOG=info
 
-ENV ARMA_BINARY=./arma3server_x64
-ENV ARMA_CONFIG=main.cfg
-ENV ARMA_PARAMS=
-ENV ARMA_PROFILE=main
-ENV ARMA_WORLD=empty
-ENV ARMA_LIMITFPS=1000
-ENV ARMA_CDLC=
-ENV HEADLESS_CLIENTS=0
-ENV HEADLESS_CLIENTS_PROFILE="\$profile-hc-\$i"
-ENV PORT=2302
-ENV MODS_LOCAL=true
-ENV CLEAR_KEYS=true
-ENV MODS_PRESET=
-ENV SKIP_INSTALL=false
+ENV ARMA3_SERVER__BINARY=./arma3server_x64
+ENV ARMA3_SERVER__CONFIG=main.cfg
+ENV ARMA3_SERVER__PARAMS=
+ENV ARMA3_SERVER__PROFILE=main
+ENV ARMA3_SERVER__WORLD=empty
+ENV ARMA3_SERVER__LIMIT_FPS=1000
+ENV ARMA3_SERVER__CDLC=
+ENV ARMA3_SERVER__PORT=2302
+ENV ARMA3_SERVER__CLEAR_KEYS=true
+ENV ARMA3_SERVER__SKIP_INSTALL=false
+ENV ARMA3_HEADLESS__CLIENTS=0
+ENV ARMA3_HEADLESS__PROFILE="\$profile-hc-\$i"
+ENV ARMA3_MODS__LOCAL=true
+ENV ARMA3_MODS__PRESET=
 
 EXPOSE 2302/udp
 EXPOSE 2303/udp
@@ -60,6 +60,4 @@ VOLUME /arma3/server
 
 STOPSIGNAL SIGINT
 
-COPY *.py /
-
-CMD ["python3","/launch.py"]
+ENTRYPOINT ["/usr/local/bin/arma3server"]

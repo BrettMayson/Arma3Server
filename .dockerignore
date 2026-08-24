@@ -1,0 +1,9 @@
+target
+legacy
+.git
+.github
+*.md
+server
+mods
+servermods
+.env

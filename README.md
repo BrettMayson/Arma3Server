@@ -18,16 +18,20 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
         -v path/to/configs:/arma3/server/configs \
         -v path/to/mods:/arma3/server/mods \
         -v path/to/servermods:/arma3/server/servermods \
-        -e STEAM_USER=myusername \
-        -e STEAM_PASSWORD=mypassword \
+        -e ARMA3_STEAM__USER=myusername \
+        -e ARMA3_STEAM__PASSWORD=mypassword \
         ghcr.io/brettmayson/arma3server/arma3server:v2
 ```
+
+The server is a single Rust binary (`arma3server`) that installs/updates itself via Steam (using [steamroom](https://github.com/landaire/steamroom)) and launches the Arma 3 process. Legacy Python scripts are kept under [legacy/](legacy/) for reference only and are not used at runtime.
 
 ### docker-compose
 
 Use the docker-compose.yml file inside a folder. It will automatically create 4 folders in which the missions, configs, mods and servermods can be loaded.
 
-Copy the `.env.example` file to `.env`, containing at least `STEAM_USER` and `STEAM_PASSWORD`.
+Copy the `.env.example` file to `.env`, containing at least `ARMA3_STEAM__USER` and `ARMA3_STEAM__PASSWORD`.
+
+All settings can also be supplied via an optional `config.toml` mounted at `/arma3/config.toml` (override the path with `ARMA3_CONFIG_FILE`). Environment variables always take priority over the TOML file. See [Configuration](#configuration) below for the TOML layout.
 
 Use `docker-compose start` to start the server.
 
@@ -54,25 +58,57 @@ Profiles are saved in `/arma3/server/configs/profiles`
 | `-v /arma3/server/servermods`        | Mods that will only be loaded by the server |
 | `-v /arma3/server`        | Folder containing the server files |
 | `-e PORT`                     | Port used by the server, (uses PORT to PORT+3)            | 2302 |
-| `-e ARMA_BINARY`              | Arma 3 server binary to use   | `./arma3server` |
-| `-e ARMA_CONFIG`              | Config file to load from `/arma3/server/configs`                 | `main.cfg` |
-| `-e ARMA_PARAMS`              | Additional Arma CLI parameters |
-| `-e ARMA_PROFILE`             | Profile name, stored in `/arma3/server/configs/profiles`         | `main` |
-| `-e ARMA_WORLD`               | World to load on startup                                  | `empty` |
-| `-e ARMA_LIMITFPS`            | Maximum FPS | `1000` |
-| `-e ARMA_CDLC`                | cDLCs to load, separated by semicolons                    | - |
-| `-e STEAM_USER`               | Steam username used to login to steamcmd |
-| `-e STEAM_PASSWORD`           | Steam password |
-| `-e HEADLESS_CLIENTS`         | Launch n number of headless clients                       | `0` |
-| `-e HEADLESS_CLIENTS_PROFILE` | Headless client profile name (supports placeholders)      | `$profile-hc-$i` |
-| `-e MODS_LOCAL`               | Should the mods folder be loaded | `true` |
-| `-e MODS_PRESET`              | An Arma 3 Launcher preset to load |
-| `-e SKIP_INSTALL`             | Skip Arma 3 installation | `false` |
-| `-e CLEAR_KEYS`               | Clear the keys directory every launch (keys will still be copied from mods) | `true` |
+| `-e ARMA3_SERVER__BINARY`     | Arma 3 server binary to use   | `./arma3server_x64` |
+| `-e ARMA3_SERVER__CONFIG`     | Config file to load from `/arma3/server/configs`                 | `main.cfg` |
+| `-e ARMA3_SERVER__PARAMS`     | Additional Arma CLI parameters |
+| `-e ARMA3_SERVER__PROFILE`    | Profile name, stored in `/arma3/server/configs/profiles`         | `main` |
+| `-e ARMA3_SERVER__WORLD`      | World to load on startup                                  | `empty` |
+| `-e ARMA3_SERVER__LIMIT_FPS`  | Maximum FPS | `1000` |
+| `-e ARMA3_SERVER__CDLC`       | cDLCs to load, separated by commas                        | - |
+| `-e ARMA3_STEAM__USER`        | Steam username used to login |
+| `-e ARMA3_STEAM__PASSWORD`    | Steam password |
+| `-e ARMA3_HEADLESS__CLIENTS`  | Launch n number of headless clients                       | `0` |
+| `-e ARMA3_HEADLESS__PROFILE`  | Headless client profile name (supports placeholders)      | `$profile-hc-$i` |
+| `-e ARMA3_MODS__LOCAL`        | Should the mods folder be loaded | `true` |
+| `-e ARMA3_MODS__PRESET`       | An Arma 3 Launcher preset to load |
+| `-e ARMA3_SERVER__SKIP_INSTALL` | Skip Arma 3 installation | `false` |
+| `-e ARMA3_SERVER__CLEAR_KEYS` | Clear the keys directory every launch (keys will still be copied from mods) | `true` |
+| `-e ARMA3_CONFIG_FILE`        | Path to an optional `config.toml` with default values | `/arma3/config.toml` |
 
 The Steam account does not need to own Arma 3, but must have Steam Guard disabled.
 
 List of Steam branches can be found on the Community Wiki, [Arma 3: Steam Branches](https://community.bistudio.com/wiki/Arma_3:_Steam_Branches)
+
+## Configuration
+
+Instead of (or alongside) environment variables, settings can be provided in a `config.toml` mounted at `/arma3/config.toml`. Environment variables always override matching TOML values.
+
+```toml
+cdlc = ["csla", "gm"]
+
+[steam]
+user = "myusername"
+password = "mypassword"
+branch = "public"
+
+[server]
+binary = "./arma3server_x64"
+config = "main.cfg"
+profile = "main"
+world = "empty"
+limit_fps = 1000
+port = 2302
+skip_install = false
+clear_keys = true
+
+[mods]
+local = true
+preset = ""
+
+[headless]
+clients = 0
+profile = "$profile-hc-$i"
+```
 
 ## Creator DLC
 
@@ -92,7 +128,7 @@ Bohemia-updated list of codes here: <https://community.bistudio.com/wiki/Categor
 
 ### Example
 
-`-e ARMA_CDLC="csla;gm;vn;ws;spe"`
+`-e ARMA3_SERVER__CDLC="csla,gm,vn,ws,spe"`
 
 ## Loading mods
 
@@ -108,8 +144,8 @@ Bohemia-updated list of codes here: <https://community.bistudio.com/wiki/Categor
 
 ### Workshop
 
-Set the environment variable `MODS_PRESET` to the HTML preset file exported from the Arma 3 Launcher. The path can be local file or a URL. A volume can be created at `/arma3/server/workshop/` to preserve the mods between containers separately from the main `/arma3/server` volume.
+Set the environment variable `ARMA3_MODS__PRESET` to the HTML preset file exported from the Arma 3 Launcher. The path can be local file or a URL. A volume can be created at `/arma3/server/workshop/` to preserve the mods between containers separately from the main `/arma3/server` volume.
 
-`-e MODS_PRESET="my_mods.html"`
+`-e ARMA3_MODS__PRESET="my_mods.html"`
 
-`-e MODS_PRESET="http://example.com/my_mods.html"`
+`-e ARMA3_MODS__PRESET="http://example.com/my_mods.html"`

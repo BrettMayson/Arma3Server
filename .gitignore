@@ -1,1 +1,6 @@
 .env
+
+
+# Added by cargo
+
+/target

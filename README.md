@@ -23,7 +23,7 @@ An Arma 3 Dedicated Server. Updates to the latest version every time it is resta
         ghcr.io/brettmayson/arma3server/arma3server:v2
 ```
 
-The server is a single Rust binary (`arma3server`) that installs/updates itself via Steam (using [steamroom](https://github.com/landaire/steamroom)) and launches the Arma 3 process. Legacy Python scripts are kept under [legacy/](legacy/) for reference only and are not used at runtime.
+The server is a single Rust binary (`arma3server`) that installs/updates itself via Steam (using [steamroom](https://github.com/landaire/steamroom)) and launches the Arma 3 process.
 
 ### docker-compose
 

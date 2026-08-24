@@ -5,10 +5,10 @@ pub mod workshop;
 use steamroom::depot::AppId;
 
 /// Arma 3's Steam app ID.
-pub const APP_ID: AppId = AppId(233780);
+pub const APP_ID: AppId = AppId(233_780);
 
 /// Manifest data from the CDN is zip-compressed; unwrap it if so.
-pub(crate) fn decompress_manifest(data: &[u8]) -> anyhow::Result<Vec<u8>> {
+pub fn decompress_manifest(data: &[u8]) -> anyhow::Result<Vec<u8>> {
     if data.len() > 2 && data[0] == 0x50 && data[1] == 0x4B {
         let cursor = std::io::Cursor::new(data);
         let mut archive = zip::ZipArchive::new(cursor)?;

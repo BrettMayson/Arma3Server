@@ -16,19 +16,19 @@ use config::Config;
 
 const SERVER_DIR: &str = "./server";
 
-const DEFAULT_CONTENT_DEPOT: u32 = 233781;
-const LINUX_SERVER_DEPOT: u32 = 233783;
-const PROFILING_DEPOT: u32 = 233785;
+const DEFAULT_CONTENT_DEPOT: u32 = 233_781;
+const LINUX_SERVER_DEPOT: u32 = 233_783;
+const PROFILING_DEPOT: u32 = 233_785;
 
 fn cdlc_depot_id(name: &str) -> Option<u32> {
     Some(match name {
-        "csla" => 233793,
-        "gm" => 233792,
-        "vn" => 233794,
-        "ws" => 233795,
-        "spe" => 233788,
-        "rf" => 233799,
-        "ef" => 233798,
+        "csla" => 233_793,
+        "gm" => 233_792,
+        "vn" => 233_794,
+        "ws" => 233_795,
+        "spe" => 233_788,
+        "rf" => 233_799,
+        "ef" => 233_798,
         _ => return None,
     })
 }

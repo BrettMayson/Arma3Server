@@ -107,13 +107,13 @@ impl Config {
         let toml_path =
             std::env::var("ARMA3_CONFIG_FILE").unwrap_or_else(|_| "./config.toml".to_string());
 
-        let mut figment = Figment::from(Serialized::defaults(Config::default()));
+        let mut figment = Figment::from(Serialized::defaults(Self::default()));
         if std::path::Path::new(&toml_path).exists() {
             figment = figment.merge(Toml::file(&toml_path));
         }
         figment = figment.merge(Env::prefixed("ARMA3_").split("__"));
 
-        let mut config: Config = figment.extract()?;
+        let mut config: Self = figment.extract()?;
 
         // `ARMA3_SERVER__CDLC` is a flat comma-separated list rather than a
         // TOML array, so figment's env parsing can't populate it reliably.

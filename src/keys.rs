@@ -6,7 +6,10 @@ use walkdir::WalkDir;
 
 /// Recursively finds `*.bikey` files under `mod_dir` and copies them into `keys_dir`.
 pub fn sync(mod_dir: &Path, keys_dir: &Path) -> Result<()> {
-    for entry in WalkDir::new(mod_dir).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(mod_dir)
+        .into_iter()
+        .filter_map(std::result::Result::ok)
+    {
         let path = entry.path();
         if path.is_file()
             && path

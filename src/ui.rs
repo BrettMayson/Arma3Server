@@ -68,7 +68,7 @@ pub fn spawn_download_progress(
                 }
                 DownloadEvent::FileSkipped { filename } => {
                     let size = {
-                        let metadata = std::fs::metadata(folder.join(filename.replace("\\", "/")));
+                        let metadata = std::fs::metadata(folder.join(filename.replace('\\', "/")));
                         match metadata {
                             Ok(m) => m.len(),
                             Err(e) => {

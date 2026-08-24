@@ -74,6 +74,30 @@ The Steam account does not need to own Arma 3, but must have Steam Guard disable
 
 List of Steam branches can be found on the Community Wiki, [Arma 3: Steam Branches](https://community.bistudio.com/wiki/Arma_3:_Steam_Branches)
 
+## Steam username and password
+This package supports Docker secrets. Define them as `STEAM_USER` and `STEAM_PASSWORD`. These secret values override the corresponding environment variables inside the launch script. Using Docker secrets is strongly recommended on shared infrastructure or any system where environment variables might be exposed.
+
+See the docker-compose example below:
+
+```s
+services:
+  arma3:
+    container_name: arma3
+    image: ghcr.io/brettmayson/arma3server/arma3server:v2
+    secrets:
+      - STEAM_USER
+      - STEAM_PASSWORD
+      ...
+
+secrets:
+  STEAM_USER:
+    file: /etc/docker/my_steam_user_file
+  STEAM_PASSWORD:
+    file: /etc/docker/my_steam_password_file
+```
+
+
+
 ## Creator DLC
 
 To use a Creator DLC the `STEAM_BRANCH` must be set to `creatordlc`

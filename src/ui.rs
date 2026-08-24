@@ -26,7 +26,10 @@ impl DownloadProgress {
 }
 
 /// Renders a progress bar driven by `DownloadEvent`s from a depot/workshop job.
-pub fn spawn_download_progress(folder: std::path::PathBuf, mut events: UnboundedReceiver<DownloadEvent>) -> DownloadProgress {
+pub fn spawn_download_progress(
+    folder: std::path::PathBuf,
+    mut events: UnboundedReceiver<DownloadEvent>,
+) -> DownloadProgress {
     let handle = tokio::spawn(async move {
         let bar = ProgressBar::new(0);
         bar.set_style(
@@ -37,9 +40,9 @@ pub fn spawn_download_progress(folder: std::path::PathBuf, mut events: Unbounded
             .progress_chars("=> "),
         );
 
-        let mut downloaded = (0,0);
-        let mut skipped = (0,0);
-        let mut removed = (0,0);
+        let mut downloaded = (0, 0);
+        let mut skipped = (0, 0);
+        let mut removed = (0, 0);
 
         while let Some(event) = events.recv().await {
             match event {

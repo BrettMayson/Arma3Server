@@ -52,9 +52,7 @@ pub fn build(
     let mut headless_args = Vec::new();
 
     if config.headless.clients > 0 {
-        let config_path = server_dir
-            .join("configs")
-            .join(&config.server.config);
+        let config_path = server_dir.join("configs").join(&config.server.config);
         let data = std::fs::read_to_string(&config_path)
             .with_context(|| format!("reading server config {}", config_path.display()))?;
 
@@ -97,7 +95,10 @@ pub fn build(
     } else {
         main_args.push(format!(
             "-config={}",
-            server_dir.join("configs").join(&config.server.config).display()
+            server_dir
+                .join("configs")
+                .join(&config.server.config)
+                .display()
         ));
     }
 

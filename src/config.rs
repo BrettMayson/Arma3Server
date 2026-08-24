@@ -104,8 +104,8 @@ impl Config {
         use figment::Figment;
         use figment::providers::{Env, Format, Serialized, Toml};
 
-        let toml_path = std::env::var("ARMA3_CONFIG_FILE")
-            .unwrap_or_else(|_| "./config.toml".to_string());
+        let toml_path =
+            std::env::var("ARMA3_CONFIG_FILE").unwrap_or_else(|_| "./config.toml".to_string());
 
         let mut figment = Figment::from(Serialized::defaults(Config::default()));
         if std::path::Path::new(&toml_path).exists() {

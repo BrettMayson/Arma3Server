@@ -47,7 +47,10 @@ pub async fn download_item(
     info!(workshop_id, title, "downloading workshop item");
 
     if hcontent == 0 {
-        info!(workshop_id, "no downloadable content for this workshop item");
+        info!(
+            workshop_id,
+            "no downloadable content for this workshop item"
+        );
         return Ok(());
     }
 
@@ -61,7 +64,10 @@ pub async fn download_item(
             .get_installed(depot_id)
             .is_some_and(|(installed, _)| installed == manifest_id);
     if up_to_date {
-        info!(workshop_id, "workshop item already up to date, skipping download");
+        info!(
+            workshop_id,
+            "workshop item already up to date, skipping download"
+        );
         return Ok(());
     }
     if let Some(interrupted) = depot_config.is_installing(depot_id) {
@@ -97,7 +103,8 @@ pub async fn download_item(
         .await
         .context("downloading workshop manifest from CDN")?;
     let manifest_bytes = decompress_manifest(&manifest_data)?;
-    let mut manifest = DepotManifest::parse(&manifest_bytes).context("parsing workshop manifest")?;
+    let mut manifest =
+        DepotManifest::parse(&manifest_bytes).context("parsing workshop manifest")?;
     if manifest.filenames_encrypted {
         manifest
             .decrypt_filenames(&depot_key)

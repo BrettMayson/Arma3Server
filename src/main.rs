@@ -45,7 +45,9 @@ async fn main() -> Result<()> {
     ui::banner();
 
     let config = Config::load().context("loading configuration")?;
-    let server_dir = PathBuf::from(SERVER_DIR).canonicalize().expect("server dir should exist");
+    let server_dir = PathBuf::from(SERVER_DIR)
+        .canonicalize()
+        .expect("server dir should exist");
     let keys_dir = server_dir.join("keys");
 
     keys::prepare(&keys_dir, config.server.clear_keys)?;

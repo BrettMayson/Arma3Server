@@ -31,7 +31,12 @@ pub async fn download(
         .depot(depot_id)
         .and_then(|d| d.manifest(branch))
         .map(|m| m.manifest_id)
-        .with_context(|| format!("no manifest found for depot {} on branch {branch}", depot_id.0))?;
+        .with_context(|| {
+            format!(
+                "no manifest found for depot {} on branch {branch}",
+                depot_id.0
+            )
+        })?;
 
     let mut depot_config = DepotConfig::load(install_dir);
     let up_to_date = depot_config.is_installing(depot_id).is_none()
@@ -54,7 +59,12 @@ pub async fn download(
         );
     }
 
-    info!(depot = depot_id.0, manifest = manifest_id.0, branch, "downloading depot");
+    info!(
+        depot = depot_id.0,
+        manifest = manifest_id.0,
+        branch,
+        "downloading depot"
+    );
 
     let depot_key = client
         .get_depot_decryption_key(depot_id, APP_ID)
